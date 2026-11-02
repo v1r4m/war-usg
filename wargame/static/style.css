@@ -220,3 +220,53 @@ body.lab .site-head .brand-name { font-family: inherit; font-size: 1rem; letter-
 .narrow { max-width: 340px; }
 .narrow form label { margin-bottom: .9rem; }
 .card ul { padding-left: 1.2rem; }
+
+/* ---------- 인트로: 붓글씨 이미지가 화면을 덮고, 칼로 베듯 대각선으로 갈라짐 ---------- */
+.intro { display: none; }
+html.intro-on { overflow: hidden; }
+html.intro-on .intro {
+  display: block; position: fixed; inset: 0; z-index: 100;
+  cursor: crosshair; outline: none; touch-action: none; user-select: none; -webkit-user-select: none;
+}
+.intro-half {
+  position: absolute; inset: 0;
+  background-color: #efe9dc; background-size: cover; background-position: center;
+  will-change: transform;
+}
+/* 잘린 직후: 칼 방향으로 살짝 어긋남 */
+.intro.slip .intro-half { transition: transform .22s cubic-bezier(.2, .9, .3, 1); }
+.intro.slip .intro-half.top { transform: translate(var(--slip-tx), var(--slip-ty)); }
+.intro.slip .intro-half.bottom { transform: translate(var(--slip-bx), var(--slip-by)); }
+/* 갈라져 날아감 */
+.intro.split .intro-half { transition: transform 1s cubic-bezier(.6, 0, .3, 1); }
+.intro.split .intro-half.top { transform: translate(var(--fly-tx), var(--fly-ty)) rotate(var(--fly-tr)); }
+.intro.split .intro-half.bottom { transform: translate(var(--fly-bx), var(--fly-by)) rotate(var(--fly-br)); }
+
+/* 칼선 */
+.intro-slash {
+  position: absolute; height: 4px; pointer-events: none; opacity: 0;
+  background: #0e0e0e; border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .85), 0 0 14px 3px rgba(255, 255, 255, .7);
+  clip-path: var(--slash-from);
+}
+.intro.slashing .intro-slash {
+  opacity: 1; clip-path: inset(0 0 0 0);
+  transition: clip-path .18s cubic-bezier(.3, .9, .3, 1);
+}
+.intro.slip .intro-slash { opacity: 0; transition: opacity .25s ease; clip-path: inset(0 0 0 0); }
+
+.intro-hint {
+  position: absolute; left: 50%; top: 2.2vh; transform: translateX(-50%);
+  padding: .25rem .9rem; border-radius: 2px; background: rgba(239, 233, 220, .85);
+  font-size: .76rem; letter-spacing: .3em; text-transform: lowercase; white-space: nowrap;
+  color: #1f3550; opacity: .85; pointer-events: none;
+  animation: intro-breathe 2.4s ease-in-out infinite;
+}
+.intro.slashing .intro-hint { opacity: 0; animation: none; transition: opacity .12s; }
+@keyframes intro-breathe { 50% { opacity: .3; } }
+
+.intro.fade { transition: opacity .3s ease; opacity: 0; }
+
+@media (prefers-color-scheme: dark) {
+  .intro-half { filter: brightness(.82) contrast(1.05); }
+}

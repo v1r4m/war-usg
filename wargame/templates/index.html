@@ -1,5 +1,122 @@
 {% extends "base.html" %}
+{% block head %}
+<script>
+  // 이 탭에서 처음 열었을 때만 인트로를 보여줌 (JS가 꺼져 있으면 인트로 없이 바로 사이트)
+  (function () {
+    var seen = false;
+    try { seen = sessionStorage.getItem("usg-intro") === "1"; } catch (e) {}
+    if (!seen) document.documentElement.classList.add("intro-on");
+  })();
+</script>
+{% endblock %}
 {% block content %}
+{% set hero = url_for('static', filename='main.webp') %}
+<div class="intro" id="intro" role="button" tabindex="0" aria-label="입장하기 — 클릭하거나 드래그하면 이미지가 베어집니다">
+  <div class="intro-half top" style="background-image: url('{{ hero }}')"></div>
+  <div class="intro-half bottom" style="background-image: url('{{ hero }}')"></div>
+  <div class="intro-slash" aria-hidden="true"></div>
+  <div class="intro-hint" aria-hidden="true">click or slash to enter</div>
+</div>
+<script>
+  (function () {
+    var el = document.getElementById("intro");
+    if (!el || !document.documentElement.classList.contains("intro-on")) return;
+    el.focus({ preventScroll: true });
+    var top = el.querySelector(".intro-half.top");
+    var bottom = el.querySelector(".intro-half.bottom");
+    var slash = el.querySelector(".intro-slash");
+    var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    var done = false;
+    var MAX = 55 * Math.PI / 180; // 너무 세로로 서지 않게
+
+    function finish() {
+      document.documentElement.classList.remove("intro-on");
+      el.remove();
+    }
+
+    // (px, py)를 지나고 각도 ang(라디안)인 선으로 화면을 벤다. dir: 1 = 왼→오, -1 = 오→왼
+    function cut(px, py, ang, dir) {
+      if (done) return;
+      done = true;
+      try { sessionStorage.setItem("usg-intro", "1"); } catch (e) {}
+      if (reduce) { el.classList.add("fade"); setTimeout(finish, 300); return; }
+
+      var W = window.innerWidth, H = window.innerHeight;
+      ang = Math.max(-MAX, Math.min(MAX, ang));
+      var t = Math.tan(ang);
+      // 화면 밖까지 넉넉하게 잘라서 (주소창 접힘 등으로 화면 크기가 바뀌어도) 틈이 안 생기게
+      var x0 = -W, x1 = 2 * W, yTop = -2 * H, yBot = 3 * H;
+      var y0 = py + t * (x0 - px), y1 = py + t * (x1 - px);
+      var pt = function (x, y) { return x.toFixed(1) + "px " + y.toFixed(1) + "px"; };
+
+      // 위/아래 조각을 잘린 선으로 클리핑
+      top.style.clipPath = "polygon(" + [pt(x0, yTop), pt(x1, yTop), pt(x1, y1), pt(x0, y0)].join(",") + ")";
+      bottom.style.clipPath = "polygon(" + [pt(x0, y0), pt(x1, y1), pt(x1, yBot), pt(x0, yBot)].join(",") + ")";
+
+      // 칼선: 클릭 지점을 중심으로 회전, 칼이 지나가는 방향으로 그려짐
+      var L = Math.hypot(W, H) * 2;
+      slash.style.width = L + "px";
+      slash.style.left = (px - L / 2) + "px";
+      slash.style.top = (py - 1.5) + "px";
+      slash.style.transform = "rotate(" + ang + "rad)";
+      slash.style.setProperty("--slash-from", dir > 0 ? "inset(0 100% 0 0)" : "inset(0 0 0 100%)");
+
+      // 칼 방향 단위벡터 u, 위쪽을 향한 법선 n
+      var ux = Math.cos(ang) * dir, uy = Math.sin(ang) * dir;
+      var nx = Math.sin(ang), ny = -Math.cos(ang);
+      var slip = 22, along = W * 0.25, away = H * 1.15;
+      var spin = 5 + Math.random() * 4;
+      var set = function (k, v) { el.style.setProperty(k, v.toFixed(1) + "px"); };
+      // 위 조각은 칼 반대 방향, 아래 조각은 칼 방향으로 어긋남
+      set("--slip-tx", -ux * slip); set("--slip-ty", -uy * slip);
+      set("--slip-bx", ux * slip);  set("--slip-by", uy * slip);
+      set("--fly-tx", -ux * along + nx * away); set("--fly-ty", -uy * along + ny * away);
+      set("--fly-bx", ux * along - nx * away);  set("--fly-by", uy * along - ny * away);
+      el.style.setProperty("--fly-tr", (-spin * dir) + "deg");
+      el.style.setProperty("--fly-br", (spin * dir * 0.7) + "deg");
+
+      void slash.offsetWidth; // 시작 상태를 확정한 뒤 애니메이션
+      el.classList.add("slashing");
+      setTimeout(function () { el.classList.add("slip"); }, 190);
+      setTimeout(function () { el.classList.add("split"); }, 560);
+      setTimeout(finish, 1650);
+    }
+
+    // 클릭이면 랜덤 대각선, 드래그(스와이프)면 그은 방향 그대로
+    var start = null;
+    el.addEventListener("pointerdown", function (e) {
+      start = { x: e.clientX, y: e.clientY };
+      try { el.setPointerCapture(e.pointerId); } catch (err) {}
+    });
+    el.addEventListener("pointerup", function (e) {
+      if (!start) return;
+      var dx = e.clientX - start.x, dy = e.clientY - start.y;
+      if (Math.hypot(dx, dy) > 40 && Math.abs(dx) > 1) {
+        var dir = dx >= 0 ? 1 : -1;
+        cut((start.x + e.clientX) / 2, (start.y + e.clientY) / 2, Math.atan(dy / dx), dir);
+      } else {
+        randomCut(e.clientX, e.clientY);
+      }
+      start = null;
+    });
+    el.addEventListener("pointercancel", function () { start = null; });
+
+    function randomCut(x, y) {
+      var deg = 14 + Math.random() * 14;
+      var dir = Math.random() < 0.5 ? 1 : -1;
+      // 왼→오로 내려 베기 / 오→왼으로 내려 베기
+      cut(x, y, (dir > 0 ? deg : -deg) * Math.PI / 180, dir);
+    }
+
+    el.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " " || e.key === "Escape") {
+        e.preventDefault();
+        randomCut(window.innerWidth / 2, window.innerHeight / 2);
+      }
+    });
+  })();
+</script>
+
 <div class="lede">
   <img class="hero" src="{{ url_for('static', filename='main.webp') }}" alt="最強海巨 — 최강해거, Ultimate Sea Giant" width="1024" height="559">
   <h1>{{ site_name }}<span class="dot">.</span></h1>
