@@ -40,6 +40,24 @@ flask --app run run --debug
 
 첫 실행 시 `instance/` 폴더에 DB(`wargame.db`)와 시크릿 키가 자동 생성되고 기본 문제가 등록됩니다.
 
+## Docker / Coolify 배포
+```bash
+docker build -t war-usg .
+docker run -d -p 8000:8000 -v war-usg-data:/app/instance \
+  -e ADMIN_USERNAME=admin -e ADMIN_PASSWORD='바꿔주세요123' war-usg
+```
+
+**Coolify 설정**
+1. 새 리소스 → GitHub 저장소 `v1r4m/war-usg` → Build Pack: **Dockerfile**
+2. Ports Exposes: `8000`
+3. Persistent Storage: Destination Path `/app/instance` (⚠️ 안 하면 재배포 때 DB가 날아가요)
+4. Environment Variables
+   - `ADMIN_USERNAME`, `ADMIN_PASSWORD` – 첫 실행 때 관리자 계정 자동 생성 (이미 있으면 무시)
+   - `TRUSTED_PROXIES=1` – Coolify 프록시 뒤에서 실제 접속 IP/HTTPS 인식
+   - `SESSION_COOKIE_SECURE=1` – HTTPS 도메인을 붙였다면
+   - `SECRET_KEY` – 선택 (없으면 볼륨에 자동 생성·보관)
+5. 헬스체크는 Dockerfile의 `/healthz` 를 사용합니다.
+
 ## 그 밖의 명령
 ```bash
 flask --app run reset-flags   # 내장 문제 플래그 재생성
@@ -53,6 +71,9 @@ flask --app run reset-flags   # 내장 문제 플래그 재생성
 | `SITE_NAME` | `USG Wargame` | 사이트 이름 |
 | `SUBMIT_RATE_LIMIT` | `10` | 1분당 플래그 제출 허용 횟수 |
 | `SESSION_COOKIE_SECURE` | `0` | HTTPS 배포 시 `1` |
+| `TRUSTED_PROXIES` | `0` | 리버스 프록시 개수 (Coolify면 `1`) |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | - | 시작 시 관리자 자동 생성 |
+| `PORT` / `WEB_CONCURRENCY` | `8000` / `2` | Docker 포트 / gunicorn 워커 수 |
 
 ## 구조
 ```

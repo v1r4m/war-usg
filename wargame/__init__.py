@@ -24,6 +24,22 @@ def _load_secret_key(instance_path):
     return key
 
 
+def _bootstrap_admin():
+    """ADMIN_USERNAME / ADMIN_PASSWORD 환경변수가 있으면, 해당 계정이 없을 때만 관리자로 생성."""
+    username = os.environ.get("ADMIN_USERNAME", "").strip()
+    password = os.environ.get("ADMIN_PASSWORD", "")
+    if not username or not password:
+        return
+    if User.query.filter_by(username=username).first():
+        return
+    if len(password) < 8:
+        raise RuntimeError("ADMIN_PASSWORD는 8자 이상이어야 합니다.")
+    user = User(username=username, is_admin=True)
+    user.set_password(password)
+    db.session.add(user)
+    db.session.commit()
+
+
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     os.makedirs(app.instance_path, exist_ok=True)
@@ -44,6 +60,15 @@ def create_app(test_config=None):
     )
     if test_config:
         app.config.update(test_config)
+
+    # Coolify(Traefik) 같은 리버스 프록시 뒤에서 실제 IP/HTTPS를 인식하도록
+    proxies = int(os.environ.get("TRUSTED_PROXIES", "0"))
+    if proxies > 0:
+        from werkzeug.middleware.proxy_fix import ProxyFix
+
+        app.wsgi_app = ProxyFix(
+            app.wsgi_app, x_for=proxies, x_proto=proxies, x_host=proxies, x_port=proxies
+        )
 
     db.init_app(app)
     csrf.init_app(app)
@@ -88,9 +113,16 @@ def create_app(test_config=None):
 
     from .seed import seed_challenges
 
+    @app.route("/healthz")
+    def healthz():
+        return {"status": "ok"}
+
     with app.app_context():
         db.create_all()
         seed_challenges()
+        _bootstrap_admin()
+        # gunicorn --preload 후 fork된 워커들이 커넥션을 공유하지 않도록 정리
+        db.engine.dispose()
 
     @app.cli.command("create-admin")
     @click.argument("username")
