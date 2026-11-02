@@ -32,7 +32,7 @@ def dashboard():
     return render_template("admin/dashboard.html", stats=stats, recent=recent)
 
 
-# ---------- 문제 관리 ----------
+# ---------- challenges ----------
 
 @bp.route("/challenges")
 def challenges():
@@ -53,17 +53,17 @@ def _fill_challenge(chal, form):
         points = -1
 
     if not title or len(title) > 100:
-        errors.append("제목은 1~100자여야 합니다.")
+        errors.append("Title must be 1–100 characters.")
     if not category or len(category) > 32:
-        errors.append("카테고리를 입력하세요.")
+        errors.append("Category is required.")
     if difficulty not in DIFFICULTIES:
-        errors.append("난이도가 올바르지 않습니다.")
+        errors.append("Invalid difficulty.")
     if not (0 <= points <= 10000):
-        errors.append("점수는 0~10000 사이 정수여야 합니다.")
+        errors.append("Points must be an integer from 0 to 10000.")
     if not flag or len(flag) > 256:
-        errors.append("플래그는 1~256자여야 합니다.")
+        errors.append("Flag must be 1–256 characters.")
     if url and not (url.startswith("/") or url.startswith("http://") or url.startswith("https://")):
-        errors.append("URL은 / 또는 http(s):// 로 시작해야 합니다.")
+        errors.append("URL must start with / or http(s)://.")
 
     chal.title = title
     chal.category = category
@@ -87,7 +87,7 @@ def challenge_new():
         else:
             db.session.add(chal)
             db.session.commit()
-            flash("문제를 만들었습니다.", "success")
+            flash("Challenge created.", "success")
             return redirect(url_for("admin.challenges"))
     return render_template(
         "admin/challenge_form.html", chal=chal, is_new=True,
@@ -107,7 +107,7 @@ def challenge_edit(chal_id):
             chal = db.get_or_404(Challenge, chal_id)
         else:
             db.session.commit()
-            flash("저장했습니다.", "success")
+            flash("Saved.", "success")
             return redirect(url_for("admin.challenges"))
     return render_template(
         "admin/challenge_form.html", chal=chal, is_new=False,
@@ -120,7 +120,7 @@ def challenge_toggle(chal_id):
     chal = db.get_or_404(Challenge, chal_id)
     chal.visible = not chal.visible
     db.session.commit()
-    flash(f"'{chal.title}' {'공개' if chal.visible else '비공개'}로 변경", "info")
+    flash(f"'{chal.title}' is now {'visible' if chal.visible else 'hidden'}.", "info")
     return redirect(url_for("admin.challenges"))
 
 
@@ -128,15 +128,15 @@ def challenge_toggle(chal_id):
 def challenge_delete(chal_id):
     chal = db.get_or_404(Challenge, chal_id)
     if chal.lab_key:
-        flash("내장 실습 문제는 삭제 대신 비공개로 전환하세요.", "error")
+        flash("Built-in lab challenges can't be deleted — hide them instead.", "error")
         return redirect(url_for("admin.challenges"))
     db.session.delete(chal)
     db.session.commit()
-    flash("문제를 삭제했습니다.", "success")
+    flash("Challenge deleted.", "success")
     return redirect(url_for("admin.challenges"))
 
 
-# ---------- 유저 관리 ----------
+# ---------- users ----------
 
 @bp.route("/users")
 def users():
@@ -147,7 +147,7 @@ def users():
 def _target_user(user_id):
     u = db.get_or_404(User, user_id)
     if u.id == current_user.id:
-        flash("자기 자신에게는 할 수 없습니다.", "error")
+        flash("You can't do that to yourself.", "error")
         return None
     return u
 
@@ -158,7 +158,7 @@ def user_toggle_admin(user_id):
     if u:
         u.is_admin = not u.is_admin
         db.session.commit()
-        flash(f"{u.username}: 관리자 권한 {'부여' if u.is_admin else '해제'}", "info")
+        flash(f"{u.username}: admin {'granted' if u.is_admin else 'revoked'}.", "info")
     return redirect(url_for("admin.users"))
 
 
@@ -167,7 +167,7 @@ def user_toggle_hidden(user_id):
     u = db.get_or_404(User, user_id)
     u.hidden = not u.hidden
     db.session.commit()
-    flash(f"{u.username}: 스코어보드 {'숨김' if u.hidden else '표시'}", "info")
+    flash(f"{u.username}: {'hidden from' if u.hidden else 'shown on'} the scoreboard.", "info")
     return redirect(url_for("admin.users"))
 
 
@@ -177,11 +177,11 @@ def user_delete(user_id):
     if u:
         db.session.delete(u)
         db.session.commit()
-        flash(f"{u.username} 계정을 삭제했습니다.", "success")
+        flash(f"Deleted account {u.username}.", "success")
     return redirect(url_for("admin.users"))
 
 
-# ---------- 제출 로그 ----------
+# ---------- submission log ----------
 
 @bp.route("/submissions")
 def submissions():

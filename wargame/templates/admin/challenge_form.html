@@ -3,7 +3,7 @@
 {% block content %}
 <div class="page-title"><h1>{{ 'new challenge' if is_new else 'edit challenge' }}<span class="dot">.</span></h1></div>
 {% include "admin/_nav.html" %}
-{% if chal.lab_key %}<div class="flash info">내장 실습 문제(<code>{{ chal.lab_key }}</code>)입니다. 플래그를 바꾸면 실습 페이지에도 즉시 반영됩니다.</div>{% endif %}
+{% if chal.lab_key %}<div class="flash info">Built-in lab challenge (<code>{{ chal.lab_key }}</code>). Changing the flag takes effect on the lab page immediately.</div>{% endif %}
 <form method="post">
   <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
   <label>title <input name="title" value="{{ chal.title or '' }}" required maxlength="100"></label>
@@ -21,8 +21,8 @@
   </div>
   <label>description <textarea name="description" rows="8">{{ chal.description or '' }}</textarea></label>
   <label>flag <input name="flag" value="{{ chal.flag or '' }}" required maxlength="256" placeholder="USG{...}" autocomplete="off" class="mono"></label>
-  <label>url (선택) <input name="url" value="{{ chal.url or '' }}" placeholder="/labs/... 또는 https://..."></label>
-  <label class="check"><input type="checkbox" name="visible" value="1" {% if chal.visible %}checked{% endif %}> 공개</label>
+  <label>url (optional) <input name="url" value="{{ chal.url or '' }}" placeholder="/labs/... or https://..."></label>
+  <label class="check"><input type="checkbox" name="visible" value="1" {% if chal.visible %}checked{% endif %}> visible</label>
   <button class="btn">{{ 'create' if is_new else 'save' }}</button>
   <a class="btn ghost" href="{{ url_for('admin.challenges') }}">cancel</a>
 </form>

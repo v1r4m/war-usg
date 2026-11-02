@@ -1,10 +1,10 @@
 """
-⚠️ 실습용 '일부러 취약한' 문제들.
+⚠️ Intentionally vulnerable practice labs.
 
-각 실습은 학습을 위해 의도적으로 취약하게 만들었지만, 실제 서버에는 피해가 가지 않도록 격리되어 있습니다.
-- SQLi: 요청마다 새로 만드는 인메모리 SQLite만 사용 (플랫폼 DB와 무관), 다중 쿼리 실행 불가
-- 경로 탐색: 실제 디스크가 아닌 가상 파일시스템(dict)만 조회
-- 쿠키 변조: 플랫폼 로그인 세션과 무관한 별도 쿠키
+Each lab is vulnerable on purpose for learning, but isolated so it can't harm the real server.
+- SQLi: uses a fresh in-memory SQLite per request (unrelated to the platform DB); no stacked queries
+- Path traversal: reads only from a virtual filesystem (dict), never the real disk
+- Cookie tampering: a separate cookie, unrelated to the platform login session
 """
 import base64
 import binascii
@@ -27,14 +27,14 @@ def flag_for(key):
     return chal.flag
 
 
-# ---------- 1. 보이지 않는 메모 (HTML 주석) ----------
+# ---------- 1. Invisible Note (HTML comment) ----------
 
 @bp.route("/hidden")
 def hidden():
     return render_template("labs/hidden.html", flag=flag_for("hidden"))
 
 
-# ---------- 2. 로봇은 출입금지 (robots.txt) ----------
+# ---------- 2. No Robots Allowed (robots.txt) ----------
 
 @bp.route("/robots/")
 def robots_index():
@@ -57,7 +57,7 @@ def robots_secret():
     return render_template("labs/robots_secret.html", flag=flag_for("robots"))
 
 
-# ---------- 3. 쿠키 몬스터 (서명 없는 쿠키 변조) ----------
+# ---------- 3. Cookie Monster (unsigned cookie tampering) ----------
 
 COOKIE_NAME = "lab_profile"
 
@@ -73,7 +73,7 @@ def cookie():
             if not isinstance(profile, dict):
                 raise ValueError
         except (binascii.Error, ValueError, UnicodeDecodeError):
-            error = "쿠키를 해석할 수 없습니다. (base64로 인코딩된 JSON이어야 해요)"
+            error = "Could not parse the cookie. (It should be base64-encoded JSON.)"
             profile = None
 
     set_default = profile is None and error is None
@@ -90,15 +90,15 @@ def cookie():
     return resp
 
 
-# ---------- 4. 남의 메모장 (IDOR) ----------
+# ---------- 4. Someone Else's Notes (IDOR) ----------
 
 def _notes():
     return {
-        1: ("admin", "관리자 메모", f"잊지 말 것: {flag_for('idor')}"),
-        2: ("alice", "장보기", "우유, 계란, 사과"),
-        3: ("guest", "내 메모", "오늘 할 일: 워게임 풀기!\n(다른 사람 메모는 볼 수 없겠지?)"),
-        4: ("bob", "비밀번호 힌트", "강아지 이름 + 생일... 이라고 쓰면 안 되겠지"),
-        5: ("alice", "여행 계획", "제주도 3박 4일"),
+        1: ("admin", "admin notes", f"don't forget: {flag_for('idor')}"),
+        2: ("alice", "groceries", "milk, eggs, apples"),
+        3: ("guest", "my note", "todo: play the wargame!\n(nobody else can read my notes... right?)"),
+        4: ("bob", "password hint", "dog's name + birthday... probably shouldn't write that here"),
+        5: ("alice", "trip plan", "4 days on Jeju island"),
     }
 
 
@@ -114,14 +114,14 @@ def idor_note(note_id):
     if note_id not in notes:
         abort(404)
     owner, title, body = notes[note_id]
-    # 취약점: 로그인한 사용자(guest)가 메모의 주인인지 확인하지 않음
+    # Vulnerability: never checks that the logged-in user (guest) owns the note
     return render_template(
         "labs/idor.html", note={"owner": owner, "title": title, "body": body},
         note_id=note_id, mine=[3],
     )
 
 
-# ---------- 5. SQL 로그인 (SQL Injection) ----------
+# ---------- 5. SQL Login (SQL injection) ----------
 
 def _fresh_db():
     conn = sqlite3.connect(":memory:")
@@ -141,7 +141,7 @@ def sqli():
         username = request.form.get("username", "")[:200]
         password = request.form.get("password", "")[:200]
         ctx["username"] = username
-        # 취약점: 사용자 입력을 그대로 문자열에 이어 붙임
+        # Vulnerability: user input is concatenated straight into the query
         query = (
             "SELECT username FROM users "
             f"WHERE username = '{username}' AND password = '{password}'"
@@ -149,7 +149,7 @@ def sqli():
         ctx["query"] = query
         conn = _fresh_db()
         try:
-            row = conn.execute(query).fetchone()  # execute()는 쿼리 1개만 실행
+            row = conn.execute(query).fetchone()  # execute() runs a single statement only
         except (sqlite3.Error, sqlite3.Warning) as e:
             ctx["error"] = str(e)
             row = None
@@ -161,19 +161,19 @@ def sqli():
             if row[0] == "admin":
                 ctx["flag"] = flag
         elif not ctx["error"]:
-            ctx["error"] = "로그인 실패"
+            ctx["error"] = "Login failed"
     return render_template("labs/sqli.html", **ctx)
 
 
-# ---------- 6. 파일 뷰어 (Path Traversal, 가상 파일시스템) ----------
+# ---------- 6. File Viewer (path traversal, virtual filesystem) ----------
 
 BASE_DIR = "/srv/files"
 
 
 def _vfs():
     return {
-        "/srv/files/welcome.txt": "파일 뷰어에 오신 것을 환영합니다!\n공개 파일: welcome.txt, notice.txt",
-        "/srv/files/notice.txt": "[공지] 보안 강화: 이제 ../ 는 필터링됩니다. 안심하세요 :)",
+        "/srv/files/welcome.txt": "Welcome to the file viewer!\npublic files: welcome.txt, notice.txt",
+        "/srv/files/notice.txt": "[notice] security update: ../ is now filtered. You're safe :)",
         "/srv/secret/flag.txt": flag_for("traversal"),
         "/etc/passwd": "root:x:0:0:root:/root:/bin/bash\nwww-data:x:33:33::/var/www:/usr/sbin/nologin",
         "/etc/hostname": "usg-lab",
@@ -184,12 +184,12 @@ def _vfs():
 def files():
     vfs = _vfs()
     name = request.args.get("name", "welcome.txt")[:200]
-    # 취약점: '../' 를 '한 번만' 지움 → '....//' 같은 입력으로 우회 가능
+    # Vulnerability: strips '../' only once, so input like '....//' gets through
     filtered = name.replace("../", "")
     if filtered.startswith("/"):
         return render_template(
             "labs/files.html", name=name, filtered=filtered, path=None, content=None,
-            blocked="절대 경로는 허용되지 않습니다.",
+            blocked="Absolute paths are not allowed.",
         )
     path = posixpath.normpath(posixpath.join(BASE_DIR, filtered))
     content = vfs.get(path)

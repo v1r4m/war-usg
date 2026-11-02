@@ -1,5 +1,5 @@
-/* 最強海巨 — usg.viram.dev 의 결을 따른 테마
-   흰 종이 · 먹색 글씨 · 남색 잉크 포인트 · 붉은 낙관(도장) */
+/* 最強海巨 — theme following usg.viram.dev
+   white paper · ink-black text · navy ink accent · red seal stamp */
 :root {
   --bg: #ffffff;
   --fg: #222222;
@@ -24,7 +24,6 @@
     --seal: #c9554a;
     --seal-fg: #161616;
   }
-  .hero { filter: brightness(0.82) contrast(1.05); }
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -86,7 +85,7 @@ button.linklike:hover { color: var(--accent); }
 
 footer.site-foot { margin-top: 3rem; font-size: .7rem; color: var(--muted); text-align: center; }
 
-/* ---------- 라벨 | 내용 섹션 (팀 사이트와 같은 구조) ---------- */
+/* ---------- label | body sections (same structure as the team site) ---------- */
 .sec { display: flex; gap: 1rem; margin-bottom: 1.5rem; }
 .sec > .label {
   flex: 0 0 4.2rem; font-size: .74rem; color: var(--accent);
@@ -96,7 +95,7 @@ footer.site-foot { margin-top: 3rem; font-size: .7rem; color: var(--muted); text
 .sec > .body { flex: 1; min-width: 0; font-size: .9rem; }
 .sec > .body p + p { margin-top: .15rem; }
 
-/* 행 목록: place · event · date */
+/* row lists: place · event · date */
 .rows .row { display: flex; align-items: baseline; gap: .7rem; padding: .12rem 0; }
 .rows .row .place { flex: 0 0 2.6rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .rows .row .event { flex: 1; min-width: 0; }
@@ -108,7 +107,7 @@ footer.site-foot { margin-top: 3rem; font-size: .7rem; color: var(--muted); text
   border-top: 1px solid var(--rule); color: var(--muted); font-size: .78rem;
 }
 
-/* 낙관 도장 */
+/* seal stamp */
 .seal {
   display: inline-grid; place-items: center;
   width: 1.15rem; height: 1.15rem; font-size: .7rem; line-height: 1;
@@ -119,25 +118,48 @@ footer.site-foot { margin-top: 3rem; font-size: .7rem; color: var(--muted); text
 .seal.big { width: 2.2rem; height: 2.2rem; font-size: 1.25rem; border-radius: 3px; }
 .seal-slot { display: inline-block; width: 1.15rem; }
 
-/* 난이도: 점 하나·둘·셋 */
+/* difficulty: one, two or three dots */
 .diff { color: var(--muted); font-size: .72rem; letter-spacing: .1em; white-space: nowrap; }
 .diff.hard { color: var(--seal); }
 .diff.medium { color: var(--accent); }
 
-/* ---------- 메인 ---------- */
-.hero { display: block; width: 100%; height: auto; border-radius: 2px; margin-bottom: 1.6rem; }
-.lede { margin-bottom: 1.8rem; }
-.lede .sub { font-size: .8rem; color: var(--muted); margin-top: .15rem; }
-.lede .links { margin-top: .8rem; }
+/* ---------- home ---------- */
+.home-hero { text-align: center; padding: 2.6rem 0 2.2rem; }
+.home-title {
+  font-family: "Noto Serif JP", "Noto Serif KR", serif; font-size: 2.7rem;
+  letter-spacing: .08em; margin-bottom: .5rem;
+}
+.home-sub { font-size: .8rem; color: var(--muted); letter-spacing: .04em; }
+.home-lede { font-size: .92rem; margin-top: 1.2rem; }
+.home-links { justify-content: center; margin-top: 1.1rem; font-size: .88rem; }
+.home-links a { border-bottom: 1px dotted var(--muted); }
 
-/* ---------- 문제 상세 ---------- */
+.home-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule);
+  margin-bottom: 2.4rem;
+}
+.home-stats > div { text-align: center; padding: 1.1rem .5rem 1rem; }
+.home-stats > div + div { border-left: 1px solid var(--rule); }
+.home-stats b { display: block; font-size: 1.9rem; font-weight: 400; line-height: 1.2; color: var(--ink); }
+.home-stats span { font-size: .74rem; color: var(--muted); letter-spacing: .06em; }
+
+.home-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2.4rem; }
+.home-label {
+  font-size: .74rem; font-weight: 400; color: var(--accent); letter-spacing: .06em;
+  padding-bottom: .35rem; margin-bottom: .45rem; border-bottom: 1px solid var(--rule);
+}
+.home-grid .rows .row .event { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.home-grid .rows .row .place { flex-basis: 1.8rem; }
+
+/* ---------- challenge detail ---------- */
 .chal-head { margin-bottom: 1.6rem; }
 .chal-head .meta { font-size: .8rem; color: var(--muted); }
 .chal-head h1 { display: flex; align-items: center; gap: .7rem; flex-wrap: wrap; }
 .desc { white-space: pre-wrap; word-break: break-word; }
 .open-link { display: inline-block; margin-top: .8rem; }
 
-/* ---------- 폼 ---------- */
+/* ---------- forms ---------- */
 form.stack { max-width: 320px; }
 label { display: block; margin-bottom: 1rem; font-size: .76rem; color: var(--accent); }
 label.check { display: flex; align-items: center; gap: .5rem; font-size: .82rem; }
@@ -169,7 +191,7 @@ input[type=checkbox] { width: auto; display: inline; margin: 0; accent-color: va
 .btn.full { width: 100%; }
 .btn.on { border-color: var(--ink); color: var(--ink); }
 
-/* ---------- 알림 ---------- */
+/* ---------- flash messages ---------- */
 .flash {
   font-size: .85rem; padding: .45rem .8rem; margin-bottom: 1.2rem;
   border-left: 2px solid var(--muted); background: var(--paper);
@@ -178,7 +200,7 @@ input[type=checkbox] { width: auto; display: inline; margin: 0; accent-color: va
 .flash.error { border-left-color: var(--seal); color: var(--seal); }
 .flash.info { border-left-color: var(--accent); }
 
-/* ---------- 표 (관리자) ---------- */
+/* ---------- tables (admin) ---------- */
 .table-wrap { overflow-x: auto; }
 table { width: 100%; border-collapse: collapse; font-size: .84rem; }
 th, td { padding: .35rem .4rem; border-bottom: 1px solid var(--rule); text-align: left; vertical-align: middle; }
@@ -194,7 +216,7 @@ td.num, th.num { text-align: right; }
 .subnav { margin: -1rem 0 1.8rem; }
 .page-title { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; margin-bottom: 1.6rem; }
 
-/* ---------- 실습(lab) 페이지 ---------- */
+/* ---------- lab pages ---------- */
 .flag-box {
   font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .95rem;
   padding: .8rem 1rem; margin: .8rem 0; border: 1px dashed var(--ink); color: var(--ink);
@@ -211,9 +233,12 @@ body.lab .site-head .brand-name { font-family: inherit; font-size: 1rem; letter-
   .sec > .label { text-align: left; flex-basis: auto; padding-top: 0; }
   .row3 { grid-template-columns: 1fr; }
   .rows .row .date { display: none; }
+  .home-grid .rows .row .date { display: inline; }
+  .home-grid { grid-template-columns: 1fr; gap: 1.8rem; }
+  .home-title { font-size: 2.1rem; }
 }
 
-/* 실습 페이지용 단순 블록 */
+/* simple blocks for lab pages */
 .card { margin-bottom: 1.8rem; }
 .card h1 { margin-bottom: .6rem; }
 .card p { margin-bottom: .4rem; }
@@ -221,28 +246,29 @@ body.lab .site-head .brand-name { font-family: inherit; font-size: 1rem; letter-
 .narrow form label { margin-bottom: .9rem; }
 .card ul { padding-left: 1.2rem; }
 
-/* ---------- 인트로: 붓글씨 이미지가 화면을 덮고, 칼로 베듯 대각선으로 갈라짐 ---------- */
+/* ---------- intro: waving flag -> slash to enter ---------- */
 .intro { display: none; }
 html.intro-on { overflow: hidden; }
 html.intro-on .intro {
-  display: block; position: fixed; inset: 0; z-index: 100;
-  cursor: crosshair; outline: none; touch-action: none; user-select: none; -webkit-user-select: none;
+  display: block; position: fixed; inset: 0; z-index: 100; overflow: hidden;
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'%3E%3Cpath d='M3 3 L23 21 L21 23 Z' fill='#f4f4f4' stroke='#141414' stroke-width='1.3' stroke-linejoin='round'/%3E%3Cpath d='M5 4 L22 20' stroke='#9aa4ad' stroke-width='.8'/%3E%3Crect x='19.5' y='23.5' width='9' height='3' rx='1.2' transform='rotate(-45 24 25)' fill='#1f3550' stroke='#141414' stroke-width='.8'/%3E%3Cpath d='M25 25 L33 33' stroke='#141414' stroke-width='4.2' stroke-linecap='round'/%3E%3Cpath d='M26.2 26.2 L32 32' stroke='#b23a2e' stroke-width='1.6' stroke-dasharray='1.6 1.4'/%3E%3C/svg%3E") 3 3, crosshair; outline: none; touch-action: none; user-select: none; -webkit-user-select: none;
+  background: #efe9dc;
 }
 .intro-half {
-  position: absolute; inset: 0;
+  position: absolute; inset: 0; display: block; width: 100%; height: 100%;
   background-color: #efe9dc; background-size: cover; background-position: center;
   will-change: transform;
 }
-/* 잘린 직후: 칼 방향으로 살짝 어긋남 */
 .intro.slip .intro-half { transition: transform .22s cubic-bezier(.2, .9, .3, 1); }
 .intro.slip .intro-half.top { transform: translate(var(--slip-tx), var(--slip-ty)); }
 .intro.slip .intro-half.bottom { transform: translate(var(--slip-bx), var(--slip-by)); }
-/* 갈라져 날아감 */
-.intro.split .intro-half { transition: transform 1s cubic-bezier(.6, 0, .3, 1); }
+.intro.split .intro-half { transition: transform 1.05s cubic-bezier(.6, 0, .3, 1); }
 .intro.split .intro-half.top { transform: translate(var(--fly-tx), var(--fly-ty)) rotate(var(--fly-tr)); }
 .intro.split .intro-half.bottom { transform: translate(var(--fly-bx), var(--fly-by)) rotate(var(--fly-br)); }
+/* after the cut the backdrop goes transparent, so the site shows through the gap */
+html.intro-on .intro.slip { background: transparent; }
 
-/* 칼선 */
+/* the cut line (where the blade actually went) */
 .intro-slash {
   position: absolute; height: 4px; pointer-events: none; opacity: 0;
   background: #0e0e0e; border-radius: 2px;
@@ -251,22 +277,63 @@ html.intro-on .intro {
 }
 .intro.slashing .intro-slash {
   opacity: 1; clip-path: inset(0 0 0 0);
-  transition: clip-path .18s cubic-bezier(.3, .9, .3, 1);
+  transition: clip-path .16s cubic-bezier(.3, .9, .3, 1);
 }
 .intro.slip .intro-slash { opacity: 0; transition: opacity .25s ease; clip-path: inset(0 0 0 0); }
 
+/* blade trail that follows the drag */
+.intro-trail {
+  position: absolute; height: 3px; width: 0; opacity: 0; pointer-events: none;
+  transform-origin: 0 50%; border-radius: 3px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0), #fff 70%, #fff);
+  box-shadow: 0 0 10px 2px rgba(255, 255, 255, .8), 0 0 28px 6px rgba(31, 53, 80, .35);
+  transition: opacity .12s;
+}
+
+/* invite a slash right away: every few seconds a blade glint sweeps across */
+.intro-ghost {
+  position: absolute; left: 50%; top: 50%; width: 0; height: 0;
+  transform: rotate(22deg); pointer-events: none;
+}
+.intro-ghost::before {
+  content: ""; position: absolute; left: -20vmax; top: -1.5px; width: 40vmax; height: 3px; border-radius: 3px;
+  background: linear-gradient(90deg, transparent, rgba(31, 53, 80, .35) 35%, rgba(255, 255, 255, .95) 78%, #fff 92%, transparent);
+  filter: drop-shadow(0 0 1px rgba(14, 14, 14, .5)) drop-shadow(0 0 8px rgba(255, 255, 255, .95));
+  opacity: 0;
+  animation: intro-ghost 3.6s cubic-bezier(.55, 0, .25, 1) 1s infinite;
+}
+@keyframes intro-ghost {
+  0% { transform: translateX(-110vmax); opacity: 0; }
+  3% { opacity: 1; }
+  25% { transform: translateX(110vmax); opacity: 1; }
+  27%, 100% { transform: translateX(110vmax); opacity: 0; }
+}
+.intro.armed .intro-ghost::before, .intro.slashing .intro-ghost::before { animation: none; opacity: 0; }
+
+/* flash at the moment of the cut */
+.intro-flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+.intro.slip .intro-flash { animation: intro-flash .32s ease-out; }
+@keyframes intro-flash { 0% { opacity: .55; } 100% { opacity: 0; } }
+
+/* hint: red 「斬」 seal */
 .intro-hint {
-  position: absolute; left: 50%; top: 2.2vh; transform: translateX(-50%);
-  padding: .25rem .9rem; border-radius: 2px; background: rgba(239, 233, 220, .85);
-  font-size: .76rem; letter-spacing: .3em; text-transform: lowercase; white-space: nowrap;
-  color: #1f3550; opacity: .85; pointer-events: none;
+  position: absolute; left: 50%; top: 2.4vh; transform: translateX(-50%);
+  display: flex; align-items: center; gap: .6rem;
+  padding: .3rem .9rem .3rem .45rem; border-radius: 2px; background: rgba(239, 233, 220, .9);
+  font-size: .76rem; letter-spacing: .28em; text-transform: lowercase; white-space: nowrap;
+  color: #1f3550; pointer-events: none;
   animation: intro-breathe 2.4s ease-in-out infinite;
 }
-.intro.slashing .intro-hint { opacity: 0; animation: none; transition: opacity .12s; }
-@keyframes intro-breathe { 50% { opacity: .3; } }
+.intro-hint .seal { width: 1.6rem; height: 1.6rem; font-size: 1rem; background: #b23a2e; color: #fff; animation: intro-seal 2.4s ease-in-out infinite; }
+.intro.armed .intro-hint, .intro.slashing .intro-hint { opacity: 0; animation: none; transition: opacity .12s; }
+@keyframes intro-breathe { 50% { opacity: .55; } }
+@keyframes intro-seal { 0%, 100% { transform: rotate(-6deg) scale(1); } 50% { transform: rotate(-10deg) scale(1.08); } }
 
 .intro.fade { transition: opacity .3s ease; opacity: 0; }
 
 @media (prefers-color-scheme: dark) {
   .intro-half { filter: brightness(.82) contrast(1.05); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .intro-ghost::before, .intro-hint, .intro-hint .seal { animation: none; }
 }

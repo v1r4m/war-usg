@@ -26,7 +26,7 @@
       </form>
       {% if u.id != current_user.id %}
       <form method="post" action="{{ url_for('admin.user_delete', user_id=u.id) }}" class="inline"
-            onsubmit="return confirm('이 계정을 삭제할까요? 풀이 기록도 함께 삭제됩니다.')">
+            onsubmit="return confirm('Delete this account? Its solves will be deleted too.')">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="btn small danger">delete</button>
       </form>

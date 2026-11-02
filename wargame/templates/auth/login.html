@@ -8,10 +8,10 @@
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label>username <input name="username" value="{{ username }}" required autofocus autocomplete="username"></label>
       <label>password <input type="password" name="password" required autocomplete="current-password"></label>
-      <label class="check"><input type="checkbox" name="remember" value="1"> 로그인 유지</label>
+      <label class="check"><input type="checkbox" name="remember" value="1"> remember me</label>
       <button class="btn">login</button>
     </form>
-    <p class="muted small" style="margin-top:1.2rem">계정이 없나요? <a href="{{ url_for('auth.register') }}">회원가입</a></p>
+    <p class="muted small" style="margin-top:1.2rem">No account? <a href="{{ url_for('auth.register') }}">join</a></p>
   </div>
 </section>
 {% endblock %}

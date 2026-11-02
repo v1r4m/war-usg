@@ -1,12 +1,12 @@
 {% extends "labs/base.html" %}
-{% block title %}파일 뷰어{% endblock %}
-{% block lab_name %}파일 뷰어{% endblock %}
+{% block title %}File Viewer{% endblock %}
+{% block lab_name %}File Viewer{% endblock %}
 {% block content %}
 <section class="card">
-  <h1>📂 공개 파일 뷰어</h1>
+  <h1>📂 Public file viewer</h1>
   <form method="get" class="flag-form">
     <input name="name" value="{{ name }}" spellcheck="false">
-    <button class="btn">열기</button>
+    <button class="btn">open</button>
   </form>
   <p class="muted small">
     <a href="{{ url_for('labs.files', name='welcome.txt') }}">welcome.txt</a> ·
@@ -17,9 +17,9 @@
   {% if blocked %}
     <p class="flash error">🚫 {{ blocked }}</p>
   {% else %}
-    <p class="muted small">필터 적용 후: <code>{{ filtered }}</code> → 경로: <code>{{ path }}</code></p>
+    <p class="muted small">after filter: <code>{{ filtered }}</code> → path: <code>{{ path }}</code></p>
     {% if content is not none %}<pre>{{ content }}</pre>
-    {% else %}<p class="flash error">파일을 찾을 수 없습니다.</p>{% endif %}
+    {% else %}<p class="flash error">File not found.</p>{% endif %}
   {% endif %}
 </section>
 {% endblock %}

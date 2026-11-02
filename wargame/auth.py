@@ -13,7 +13,7 @@ USERNAME_RE = re.compile(r"^[A-Za-z0-9_\-]{3,20}$")
 
 
 def _safe_next(target):
-    """오픈 리다이렉트 방지: 같은 사이트의 상대 경로만 허용."""
+    """Prevent open redirects: only allow relative paths on this site."""
     if not target:
         return None
     parts = urlsplit(target)
@@ -36,13 +36,13 @@ def register():
 
         error = None
         if not USERNAME_RE.match(username):
-            error = "아이디는 3~20자의 영문, 숫자, _, - 만 사용할 수 있습니다."
+            error = "Username must be 3–20 characters: letters, digits, _ or -."
         elif len(password) < 8:
-            error = "비밀번호는 8자 이상이어야 합니다."
+            error = "Password must be at least 8 characters."
         elif password != confirm:
-            error = "비밀번호 확인이 일치하지 않습니다."
+            error = "Passwords do not match."
         elif User.query.filter(db.func.lower(User.username) == username.lower()).first():
-            error = "이미 사용 중인 아이디입니다."
+            error = "That username is taken."
 
         if error:
             flash(error, "error")
@@ -53,7 +53,7 @@ def register():
         db.session.add(user)
         db.session.commit()
         login_user(user)
-        flash(f"환영합니다, {username}! 첫 문제부터 시작해 보세요.", "success")
+        flash(f"Welcome, {username}! Start with the first challenge.", "success")
         return redirect(url_for("main.challenges"))
 
     return render_template("auth/register.html", username="")
@@ -69,11 +69,11 @@ def login():
         password = request.form.get("password", "")
         user = User.query.filter_by(username=username).first()
         if user is None or not user.check_password(password):
-            flash("아이디 또는 비밀번호가 올바르지 않습니다.", "error")
+            flash("Wrong username or password.", "error")
             return render_template("auth/login.html", username=username), 401
 
         login_user(user, remember=bool(request.form.get("remember")))
-        flash("로그인했습니다.", "success")
+        flash("Logged in.", "success")
         return redirect(_safe_next(request.args.get("next")) or url_for("main.challenges"))
 
     return render_template("auth/login.html", username="")
@@ -83,5 +83,5 @@ def login():
 @login_required
 def logout():
     logout_user()
-    flash("로그아웃했습니다.", "info")
+    flash("Logged out.", "info")
     return redirect(url_for("main.index"))

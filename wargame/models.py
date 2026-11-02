@@ -47,7 +47,7 @@ class Challenge(db.Model):
     description = db.Column(db.Text, nullable=False, default="")
     points = db.Column(db.Integer, nullable=False, default=100)
     flag = db.Column(db.String(256), nullable=False)
-    # 내장 실습(lab) 문제와 연결되는 키. 관리자가 만든 일반 문제는 None.
+    # Key linking to a built-in lab. None for challenges created by admins.
     lab_key = db.Column(db.String(32), unique=True, nullable=True)
     url = db.Column(db.String(256), nullable=True)
     visible = db.Column(db.Boolean, nullable=False, default=True)
@@ -91,7 +91,7 @@ class Submission(db.Model):
 
 
 def scoreboard(limit=None):
-    """(user, score, solve_count, last_solve) 목록. 점수 내림차순, 동점이면 먼저 도달한 사람 우선."""
+    """List of (user, score, solve_count, last_solve). Highest score first; ties go to whoever got there first."""
     score = func.coalesce(func.sum(Challenge.points), 0).label("score")
     last = func.max(Solve.solved_at).label("last")
     count = func.count(Solve.id).label("count")

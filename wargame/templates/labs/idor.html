@@ -1,19 +1,19 @@
 {% extends "labs/base.html" %}
-{% block title %}안전한 메모장{% endblock %}
-{% block lab_name %}안전한 메모장{% endblock %}
+{% block title %}Safe Notes{% endblock %}
+{% block lab_name %}Safe Notes{% endblock %}
 {% block content %}
 <section class="card">
-  <p class="muted small">로그인: <b>guest</b></p>
-  <h1>📒 내 메모</h1>
+  <p class="muted small">logged in as <b>guest</b></p>
+  <h1>📒 My notes</h1>
   <ul>
     {% for nid in mine %}
-    <li><a href="{{ url_for('labs.idor_note', note_id=nid) }}">메모 #{{ nid }}</a></li>
+    <li><a href="{{ url_for('labs.idor_note', note_id=nid) }}">note #{{ nid }}</a></li>
     {% endfor %}
   </ul>
 </section>
 {% if note %}
 <section class="card">
-  <p class="muted small">메모 #{{ note_id }} · 작성자 {{ note.owner }}</p>
+  <p class="muted small">note #{{ note_id }} · by {{ note.owner }}</p>
   <h2>{{ note.title }}</h2>
   <div class="desc">{{ note.body }}</div>
 </section>

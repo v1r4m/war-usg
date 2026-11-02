@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 {% block head %}
 <script>
-  // 이 탭에서 처음 열었을 때만 인트로를 보여줌 (JS가 꺼져 있으면 인트로 없이 바로 사이트)
+  // Show the intro only on the first visit in this tab (no JS -> straight to the site)
   (function () {
     var seen = false;
     try { seen = sessionStorage.getItem("usg-intro") === "1"; } catch (e) {}
@@ -11,63 +11,129 @@
 {% endblock %}
 {% block content %}
 {% set hero = url_for('static', filename='main.webp') %}
-<div class="intro" id="intro" role="button" tabindex="0" aria-label="입장하기 — 클릭하거나 드래그하면 이미지가 베어집니다">
-  <div class="intro-half top" style="background-image: url('{{ hero }}')"></div>
-  <div class="intro-half bottom" style="background-image: url('{{ hero }}')"></div>
+<div class="intro" id="intro" role="button" tabindex="0" aria-label="Enter — drag to slash, or click">
+  <canvas class="intro-half top" style="background-image: url('{{ hero }}')"></canvas>
+  <canvas class="intro-half bottom" style="background-image: url('{{ hero }}')"></canvas>
+  <div class="intro-ghost" aria-hidden="true"></div>
+  <div class="intro-trail" aria-hidden="true"></div>
   <div class="intro-slash" aria-hidden="true"></div>
-  <div class="intro-hint" aria-hidden="true">click or slash to enter</div>
+  <div class="intro-flash" aria-hidden="true"></div>
+  <div class="intro-hint" aria-hidden="true"><span class="seal">斬</span><span>slash to enter</span></div>
 </div>
 <script>
   (function () {
     var el = document.getElementById("intro");
     if (!el || !document.documentElement.classList.contains("intro-on")) return;
     el.focus({ preventScroll: true });
-    var top = el.querySelector(".intro-half.top");
-    var bottom = el.querySelector(".intro-half.bottom");
+
+    var topC = el.querySelector(".intro-half.top");
+    var botC = el.querySelector(".intro-half.bottom");
     var slash = el.querySelector(".intro-slash");
+    var trail = el.querySelector(".intro-trail");
     var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    var done = false;
-    var MAX = 55 * Math.PI / 180; // 너무 세로로 서지 않게
+    var done = false, running = true;
+    var MAX = 55 * Math.PI / 180;
+
+    // ---------- the image waves like a flag (canvas) ----------
+    var img = new Image();
+    var ready = false;
+    img.onload = function () { ready = true; };
+    img.src = "{{ hero }}";
+
+    var tctx = topC.getContext("2d"), bctx = botC.getContext("2d");
+    var W = 0, H = 0, dpr = 1;
+    function resize() {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      W = Math.round(window.innerWidth * dpr);
+      H = Math.round(window.innerHeight * dpr);
+      topC.width = botC.width = W;
+      topC.height = botC.height = H;
+    }
+    resize();
+    window.addEventListener("resize", resize);
+
+    var gust = 0.6;          // wind strength (grows with mouse movement and on the cut)
+    var TAU = Math.PI * 2;
+
+    function drawFlag(t) {
+      var iw = img.naturalWidth, ih = img.naturalHeight;
+      var scale = Math.max(W / iw, H / ih) * 1.08;   // slightly oversized so edges never show while waving
+      var dw = iw * scale, dh = ih * scale;
+      var ox = (W - dw) / 2, oy = (H - dh) / 2;
+      var step = Math.max(2, Math.round(3 * dpr));
+      var amp = H * (0.010 + 0.018 * Math.min(gust, 2.5));
+
+      tctx.fillStyle = "#efe9dc";
+      tctx.fillRect(0, 0, W, H);
+      for (var x = 0; x < W; x += step) {
+        var u = x / W;
+        var r = 0.2 + 0.8 * u;                       // waves more the farther from the pole (left)
+        var p1 = u * TAU * 1.5 - t * 2.4;
+        var p2 = u * TAU * 3.2 - t * 3.7 + 1.3;
+        var dy = amp * r * (Math.sin(p1) + 0.35 * Math.sin(p2));
+        var slope = Math.cos(p1) + 0.75 * Math.cos(p2);
+        tctx.drawImage(img, (x - ox) / scale, 0, step / scale, ih, x, oy + dy, step + 1, dh);
+        // shading where the cloth folds
+        var a = Math.max(-0.16, Math.min(0.16, slope * 0.07 * r * (0.6 + 0.4 * Math.min(gust, 2))));
+        tctx.fillStyle = a > 0 ? "rgba(0,0,0," + a.toFixed(3) + ")" : "rgba(255,255,255," + (-a * 0.8).toFixed(3) + ")";
+        tctx.fillRect(x, 0, step + 1, H);
+      }
+      bctx.clearRect(0, 0, W, H);
+      bctx.drawImage(topC, 0, 0);
+    }
+
+    var t0 = performance.now();
+    function loop(now) {
+      if (!running) return;
+      if (ready) {
+        var t = (now - t0) / 1000;
+        if (reduce) { gust = 0; drawFlag(0); }
+        else drawFlag(t);
+      }
+      gust += (0.6 - gust) * 0.03;                   // wind slowly dies down
+      if (!reduce) requestAnimationFrame(loop);
+      else if (!ready) requestAnimationFrame(loop);
+    }
+    requestAnimationFrame(loop);
 
     function finish() {
+      running = false;
+      window.removeEventListener("resize", resize);
       document.documentElement.classList.remove("intro-on");
       el.remove();
     }
 
-    // (px, py)를 지나고 각도 ang(라디안)인 선으로 화면을 벤다. dir: 1 = 왼→오, -1 = 오→왼
+    // ---------- the cut ----------
+    // cut along the line through (px, py) at angle ang. dir: 1 = left->right, -1 = right->left
     function cut(px, py, ang, dir) {
       if (done) return;
       done = true;
       try { sessionStorage.setItem("usg-intro", "1"); } catch (e) {}
+      trail.style.opacity = "0";
       if (reduce) { el.classList.add("fade"); setTimeout(finish, 300); return; }
 
-      var W = window.innerWidth, H = window.innerHeight;
+      var vw = window.innerWidth, vh = window.innerHeight;
       ang = Math.max(-MAX, Math.min(MAX, ang));
       var t = Math.tan(ang);
-      // 화면 밖까지 넉넉하게 잘라서 (주소창 접힘 등으로 화면 크기가 바뀌어도) 틈이 안 생기게
-      var x0 = -W, x1 = 2 * W, yTop = -2 * H, yBot = 3 * H;
+      // extend well past the viewport so no gap ever shows
+      var x0 = -vw, x1 = 2 * vw, yTop = -2 * vh, yBot = 3 * vh;
       var y0 = py + t * (x0 - px), y1 = py + t * (x1 - px);
       var pt = function (x, y) { return x.toFixed(1) + "px " + y.toFixed(1) + "px"; };
+      topC.style.clipPath = "polygon(" + [pt(x0, yTop), pt(x1, yTop), pt(x1, y1), pt(x0, y0)].join(",") + ")";
+      botC.style.clipPath = "polygon(" + [pt(x0, y0), pt(x1, y1), pt(x1, yBot), pt(x0, yBot)].join(",") + ")";
 
-      // 위/아래 조각을 잘린 선으로 클리핑
-      top.style.clipPath = "polygon(" + [pt(x0, yTop), pt(x1, yTop), pt(x1, y1), pt(x0, y0)].join(",") + ")";
-      bottom.style.clipPath = "polygon(" + [pt(x0, y0), pt(x1, y1), pt(x1, yBot), pt(x0, yBot)].join(",") + ")";
-
-      // 칼선: 클릭 지점을 중심으로 회전, 칼이 지나가는 방향으로 그려짐
-      var L = Math.hypot(W, H) * 2;
+      var L = Math.hypot(vw, vh) * 2;
       slash.style.width = L + "px";
       slash.style.left = (px - L / 2) + "px";
-      slash.style.top = (py - 1.5) + "px";
+      slash.style.top = (py - 2) + "px";
       slash.style.transform = "rotate(" + ang + "rad)";
       slash.style.setProperty("--slash-from", dir > 0 ? "inset(0 100% 0 0)" : "inset(0 0 0 100%)");
 
-      // 칼 방향 단위벡터 u, 위쪽을 향한 법선 n
       var ux = Math.cos(ang) * dir, uy = Math.sin(ang) * dir;
       var nx = Math.sin(ang), ny = -Math.cos(ang);
-      var slip = 22, along = W * 0.25, away = H * 1.15;
+      var slip = 22, along = vw * 0.25, away = vh * 1.15;
       var spin = 5 + Math.random() * 4;
       var set = function (k, v) { el.style.setProperty(k, v.toFixed(1) + "px"); };
-      // 위 조각은 칼 반대 방향, 아래 조각은 칼 방향으로 어긋남
       set("--slip-tx", -ux * slip); set("--slip-ty", -uy * slip);
       set("--slip-bx", ux * slip);  set("--slip-by", uy * slip);
       set("--fly-tx", -ux * along + nx * away); set("--fly-ty", -uy * along + ny * away);
@@ -75,39 +141,55 @@
       el.style.setProperty("--fly-tr", (-spin * dir) + "deg");
       el.style.setProperty("--fly-br", (spin * dir * 0.7) + "deg");
 
-      void slash.offsetWidth; // 시작 상태를 확정한 뒤 애니메이션
+      void slash.offsetWidth;
       el.classList.add("slashing");
-      setTimeout(function () { el.classList.add("slip"); }, 190);
+      setTimeout(function () { el.classList.add("slip"); gust = 2.6; }, 170);   // the cloth billows at the moment of the cut
       setTimeout(function () { el.classList.add("split"); }, 560);
-      setTimeout(finish, 1650);
+      setTimeout(finish, 1700);
     }
 
-    // 클릭이면 랜덤 대각선, 드래그(스와이프)면 그은 방향 그대로
-    var start = null;
+    function randomCut(x, y) {
+      var deg = 14 + Math.random() * 14;
+      var dir = Math.random() < 0.5 ? 1 : -1;
+      cut(x, y, (dir > 0 ? deg : -deg) * Math.PI / 180, dir);
+    }
+
+    // ---------- input: drag shows the blade trail, release cuts along it ----------
+    var start = null, last = null;
     el.addEventListener("pointerdown", function (e) {
+      if (done) return;
       start = { x: e.clientX, y: e.clientY };
+      el.classList.add("armed");
       try { el.setPointerCapture(e.pointerId); } catch (err) {}
     });
+    el.addEventListener("pointermove", function (e) {
+      if (last) {
+        var sp = Math.hypot(e.clientX - last.x, e.clientY - last.y);
+        gust = Math.min(2.5, gust + sp * 0.004);      // wind from the mouse
+      }
+      last = { x: e.clientX, y: e.clientY };
+      if (!start || done) return;
+      var dx = e.clientX - start.x, dy = e.clientY - start.y;
+      var d = Math.hypot(dx, dy);
+      trail.style.left = start.x + "px";
+      trail.style.top = (start.y - 1.5) + "px";
+      trail.style.width = d + "px";
+      trail.style.transform = "rotate(" + Math.atan2(dy, dx) + "rad)";
+      trail.style.opacity = d > 8 ? "1" : "0";
+    });
     el.addEventListener("pointerup", function (e) {
-      if (!start) return;
+      if (!start || done) return;
       var dx = e.clientX - start.x, dy = e.clientY - start.y;
       if (Math.hypot(dx, dy) > 40 && Math.abs(dx) > 1) {
-        var dir = dx >= 0 ? 1 : -1;
-        cut((start.x + e.clientX) / 2, (start.y + e.clientY) / 2, Math.atan(dy / dx), dir);
+        cut((start.x + e.clientX) / 2, (start.y + e.clientY) / 2, Math.atan(dy / dx), dx >= 0 ? 1 : -1);
       } else {
         randomCut(e.clientX, e.clientY);
       }
       start = null;
     });
-    el.addEventListener("pointercancel", function () { start = null; });
-
-    function randomCut(x, y) {
-      var deg = 14 + Math.random() * 14;
-      var dir = Math.random() < 0.5 ? 1 : -1;
-      // 왼→오로 내려 베기 / 오→왼으로 내려 베기
-      cut(x, y, (dir > 0 ? deg : -deg) * Math.PI / 180, dir);
-    }
-
+    el.addEventListener("pointercancel", function () {
+      start = null; trail.style.opacity = "0"; el.classList.remove("armed");
+    });
     el.addEventListener("keydown", function (e) {
       if (e.key === "Enter" || e.key === " " || e.key === "Escape") {
         e.preventDefault();
@@ -117,57 +199,57 @@
   })();
 </script>
 
-<div class="lede">
-  <img class="hero" src="{{ url_for('static', filename='main.webp') }}" alt="最強海巨 — 최강해거, Ultimate Sea Giant" width="1024" height="559">
-  <h1>{{ site_name }}<span class="dot">.</span></h1>
-  <div class="sub">최강해거 · Ultimate Sea Giant</div>
-  <div class="sub">wargame — 문제를 풀고 <span class="mono">USG{...}</span> 를 찾아오세요</div>
-  <div class="links">
+<section class="home-hero">
+  <h1 class="home-title">{{ site_name }}<span class="dot">.</span></h1>
+  <p class="home-sub">Ultimate Sea Giant · wargame</p>
+  <p class="home-lede">Web, crypto, forensics… solve the challenges and capture the <span class="mono">USG{...}</span> flags.</p>
+  <nav class="links home-links">
     {% if current_user.is_authenticated %}
-      <a href="{{ url_for('main.challenges') }}">문제 풀러 가기 →</a>
+      <a href="{{ url_for('main.challenges') }}">go to challenges →</a>
     {% else %}
-      <a href="{{ url_for('auth.register') }}">시작하기 →</a>
+      <a href="{{ url_for('auth.register') }}">get started →</a>
       <span class="sep">·</span>
-      <a href="{{ url_for('auth.login') }}">로그인</a>
+      <a href="{{ url_for('auth.login') }}">log in</a>
     {% endif %}
-  </div>
+  </nav>
+</section>
+
+<section class="home-stats num">
+  <div><b>{{ stats.challenges }}</b><span>challenges</span></div>
+  <div><b>{{ stats.users }}</b><span>players</span></div>
+  <div><b>{{ stats.solves }}</b><span>solves</span></div>
+</section>
+
+<div class="home-grid">
+  <section>
+    <h2 class="home-label">top 5</h2>
+    <div class="rows num">
+      {% for u, score, count, last in top %}
+      <div class="row {% if loop.first %}best{% endif %}">
+        <span class="place">#{{ loop.index }}</span>
+        <span class="event"><a href="{{ url_for('main.user', user_id=u.id) }}">{{ u.username }}</a></span>
+        <span class="date">{{ score }} pts</span>
+      </div>
+      {% else %}
+      <p class="muted small">No players yet.</p>
+      {% endfor %}
+      {% if top %}<div class="total"><span></span><a href="{{ url_for('main.scoreboard_page') }}">full scoreboard →</a></div>{% endif %}
+    </div>
+  </section>
+
+  <section>
+    <h2 class="home-label">recent</h2>
+    <div class="rows num">
+      {% for s in recent %}
+      <div class="row">
+        <span class="event"><a href="{{ url_for('main.user', user_id=s.user.id) }}">{{ s.user.username }}</a>
+          <span class="muted">·</span> {{ s.challenge.title }}</span>
+        <span class="date">{{ (s.solved_at|kst)[5:] }}</span>
+      </div>
+      {% else %}
+      <p class="muted small">Be the first to solve one.</p>
+      {% endfor %}
+    </div>
+  </section>
 </div>
-
-<section class="sec">
-  <div class="label">board</div>
-  <div class="body num">
-    <p>{{ stats.challenges }} challenges · {{ stats.users }} players · {{ stats.solves }} solves</p>
-  </div>
-</section>
-
-<section class="sec">
-  <div class="label">top</div>
-  <div class="body rows">
-    {% for u, score, count, last in top %}
-    <div class="row {% if loop.first %}best{% endif %}">
-      <span class="place">#{{ loop.index }}</span>
-      <span class="event"><a href="{{ url_for('main.user', user_id=u.id) }}">{{ u.username }}</a></span>
-      <span class="date">{{ score }} pts</span>
-    </div>
-    {% else %}
-    <p class="muted">아직 참가자가 없어요.</p>
-    {% endfor %}
-    {% if top %}<div class="total"><a href="{{ url_for('main.scoreboard_page') }}">전체 순위 →</a></div>{% endif %}
-  </div>
-</section>
-
-<section class="sec">
-  <div class="label">recent</div>
-  <div class="body rows">
-    {% for s in recent %}
-    <div class="row">
-      <span class="event"><a href="{{ url_for('main.user', user_id=s.user.id) }}">{{ s.user.username }}</a>
-        <span class="muted">solved</span> {{ s.challenge.title }}</span>
-      <span class="date">{{ s.solved_at|kst }}</span>
-    </div>
-    {% else %}
-    <p class="muted">첫 번째 해결자가 되어 보세요.</p>
-    {% endfor %}
-  </div>
-</section>
 {% endblock %}

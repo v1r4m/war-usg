@@ -7,12 +7,12 @@
     <form method="post" class="stack">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
       <label>username <input name="username" value="{{ username }}" required autofocus
-             pattern="[A-Za-z0-9_\-]{3,20}" title="3~20자 영문, 숫자, _, -" autocomplete="username"></label>
+             pattern="[A-Za-z0-9_\-]{3,20}" title="3–20 characters: letters, digits, _ or -" autocomplete="username"></label>
       <label>password <input type="password" name="password" required minlength="8" autocomplete="new-password"></label>
       <label>confirm <input type="password" name="confirm" required minlength="8" autocomplete="new-password"></label>
       <button class="btn">join</button>
     </form>
-    <p class="muted small" style="margin-top:1.2rem">이미 계정이 있나요? <a href="{{ url_for('auth.login') }}">로그인</a></p>
+    <p class="muted small" style="margin-top:1.2rem">Already have an account? <a href="{{ url_for('auth.login') }}">log in</a></p>
   </div>
 </section>
 {% endblock %}

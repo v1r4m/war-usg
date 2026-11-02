@@ -26,7 +26,7 @@
       </form>
       {% if not c.lab_key %}
       <form method="post" action="{{ url_for('admin.challenge_delete', chal_id=c.id) }}" class="inline"
-            onsubmit="return confirm('정말 삭제할까요? 풀이 기록도 함께 삭제됩니다.')">
+            onsubmit="return confirm('Delete this challenge? Its solves will be deleted too.')">
         <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
         <button class="btn small danger">delete</button>
       </form>

@@ -1,7 +1,7 @@
 #!/bin/sh
 set -e
 
-# 볼륨이 root 소유로 마운트되는 경우가 있어서, root로 시작했다면 권한을 맞춘 뒤 app 유저로 실행
+# Volumes are sometimes mounted root-owned: if started as root, fix ownership, then drop to the app user
 if [ "$(id -u)" = "0" ]; then
   chown -R app:app /app/instance
   export HOME=/app

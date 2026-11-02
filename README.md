@@ -1,89 +1,91 @@
 # war-usg
-바다거임 워게임~! 🌊🚩
+The 最強海巨 (Ultimate Sea Giant) wargame 🌊🚩
 
-Flask로 만든 해킹 워게임(CTF) 플랫폼입니다.
+A hacking wargame (CTF) platform built with Flask.
 
-## 기능
-- **회원가입 / 로그인** (비밀번호 해시, CSRF 보호, 오픈 리다이렉트 방지)
-- **문제 목록** – 분야별 그룹, 난이도 뱃지, 해결 여부 / 해결 인원 표시
-- **플래그 제출** – 상수 시간 비교, 1분당 제출 횟수 제한, 🩸 퍼스트 블러드
-- **스코어보드 / 유저 프로필** – 동점이면 먼저 도달한 사람이 위
-- **관리자 페이지** – 대시보드, 문제 추가·수정·공개 전환·삭제, 유저 관리, 제출 로그
-- **내장 실습 문제 8개** – 설치할 때마다 플래그가 랜덤으로 생성됩니다
+## Features
+- **Sign up / log in**: hashed passwords, CSRF protection, open-redirect protection
+- **Challenge list**: grouped by category, with difficulty, solved state, and solve counts
+- **Flag submission**: constant-time comparison, per-minute rate limit, first blood
+- **Scoreboard / user profiles**: ties go to whoever got there first
+- **Admin pages**: dashboard, create / edit / hide / delete challenges, user management, submission log
+- **Slash intro**: the team artwork waves like a flag on the home page; drag (or click) to slice it open
+- **8 built-in labs**: flags are randomly generated on every install
 
-| 문제 | 분야 | 난이도 | 주제 |
+| Challenge | Category | Difficulty | Topic |
 |---|---|---|---|
-| Welcome to USG | misc | easy | 플래그 제출 연습 |
-| 보이지 않는 메모 | web | easy | HTML 소스 보기 |
-| 로봇은 출입금지 | web | easy | robots.txt |
-| 이중 암호 | crypto | easy | Base64 + ROT13 |
-| 쿠키 몬스터 | web | easy | 서명 없는 쿠키 변조 |
-| 남의 메모장 | web | medium | IDOR |
-| SQL 로그인 | web | medium | SQL Injection |
-| 파일 뷰어 | web | hard | Path Traversal 필터 우회 |
+| Welcome to USG | misc | easy | Submitting a flag |
+| Invisible Note | web | easy | Viewing page source |
+| No Robots Allowed | web | easy | robots.txt |
+| Double Cipher | crypto | easy | Base64 + ROT13 |
+| Cookie Monster | web | easy | Unsigned cookie tampering |
+| Someone Else's Notes | web | medium | IDOR |
+| SQL Login | web | medium | SQL injection |
+| File Viewer | web | hard | Path traversal filter bypass |
 
-> 실습 문제는 학습용으로 **일부러 취약하게** 만들었지만 서버 자체는 안전하도록 격리되어 있습니다.
-> SQLi는 요청마다 새로 만드는 인메모리 DB만 쓰고, 경로 탐색은 실제 디스크가 아닌 가상 파일시스템만 조회합니다.
+> The labs are **intentionally vulnerable** for learning, but isolated so the server itself stays safe.
+> SQLi only touches a fresh in-memory DB per request, and path traversal reads from a virtual filesystem, never the real disk.
 
-## 실행
+## Run locally
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# 관리자 계정 만들기 (비밀번호는 프롬프트로 입력)
+# create an admin account (you'll be prompted for the password)
 flask --app run create-admin admin
 
-# 서버 실행 → http://127.0.0.1:5000
-flask --app run run --debug
+# start the server → http://127.0.0.1:5050
+# (on macOS, port 5000 is taken by the AirPlay receiver)
+flask --app run run --debug --port 5050
 ```
 
-첫 실행 시 `instance/` 폴더에 DB(`wargame.db`)와 시크릿 키가 자동 생성되고 기본 문제가 등록됩니다.
+On first start, the DB (`wargame.db`) and a secret key are created under `instance/`, and the default challenges are added.
 
-## Docker / Coolify 배포
+## Docker / Coolify
 ```bash
 docker build -t war-usg .
 docker run -d -p 8000:8000 -v war-usg-data:/app/instance \
-  -e ADMIN_USERNAME=admin -e ADMIN_PASSWORD='바꿔주세요123' war-usg
+  -e ADMIN_USERNAME=admin -e ADMIN_PASSWORD='change-me-please' war-usg
 ```
 
-**Coolify 설정**
-1. 새 리소스 → GitHub 저장소 `v1r4m/war-usg` → Build Pack: **Dockerfile**
+**Coolify setup**
+1. New resource → GitHub repo `v1r4m/war-usg` → Build Pack: **Dockerfile**
 2. Ports Exposes: `8000`
-3. Persistent Storage: Destination Path `/app/instance` (⚠️ 안 하면 재배포 때 DB가 날아가요)
-4. Environment Variables
-   - `ADMIN_USERNAME`, `ADMIN_PASSWORD` – 첫 실행 때 관리자 계정 자동 생성 (이미 있으면 무시)
-   - `TRUSTED_PROXIES=1` – Coolify 프록시 뒤에서 실제 접속 IP/HTTPS 인식
-   - `SESSION_COOKIE_SECURE=1` – HTTPS 도메인을 붙였다면
-   - `SECRET_KEY` – 선택 (없으면 볼륨에 자동 생성·보관)
-5. 헬스체크는 Dockerfile의 `/healthz` 를 사용합니다.
+3. Persistent Storage: Volume Mount, destination path `/app/instance` (⚠️ without it, every redeploy wipes the DB)
+4. Environment variables
+   - `ADMIN_USERNAME`, `ADMIN_PASSWORD`: create the admin on first start (ignored if the account exists)
+   - `TRUSTED_PROXIES=1`: see the real client IP / HTTPS behind Coolify's proxy
+   - `SESSION_COOKIE_SECURE=1`: if you serve it over an HTTPS domain
+   - `SECRET_KEY`: optional (otherwise generated and kept on the volume)
+5. The health check uses `/healthz` (defined in the Dockerfile).
 
-## 그 밖의 명령
+## Other commands
 ```bash
-flask --app run reset-flags   # 내장 문제 플래그 재생성
+flask --app run reset-flags   # regenerate flags for the built-in labs
 ```
 
-## 환경 변수
-| 이름 | 기본값 | 설명 |
+## Environment variables
+| Name | Default | Description |
 |---|---|---|
-| `SECRET_KEY` | 자동 생성 | 세션 서명 키 |
-| `DATABASE_URL` | `sqlite:///instance/wargame.db` | DB 주소 |
-| `SITE_NAME` | `最強海巨` | 사이트 이름 |
-| `SUBMIT_RATE_LIMIT` | `10` | 1분당 플래그 제출 허용 횟수 |
-| `SESSION_COOKIE_SECURE` | `0` | HTTPS 배포 시 `1` |
-| `TRUSTED_PROXIES` | `0` | 리버스 프록시 개수 (Coolify면 `1`) |
-| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | - | 시작 시 관리자 자동 생성 |
-| `PORT` / `WEB_CONCURRENCY` | `8000` / `2` | Docker 포트 / gunicorn 워커 수 |
+| `SECRET_KEY` | auto-generated | Session signing key |
+| `DATABASE_URL` | `sqlite:///instance/wargame.db` | Database URL |
+| `SITE_NAME` | `最強海巨` | Site name |
+| `SUBMIT_RATE_LIMIT` | `10` | Flag submissions allowed per minute |
+| `SESSION_COOKIE_SECURE` | `0` | Set to `1` when served over HTTPS |
+| `TRUSTED_PROXIES` | `0` | Number of reverse proxies in front (`1` on Coolify) |
+| `ADMIN_USERNAME` / `ADMIN_PASSWORD` | - | Create an admin on startup |
+| `PORT` / `WEB_CONCURRENCY` | `8000` / `2` | Docker port / gunicorn workers |
 
-## 구조
+## Layout
 ```
 wargame/
-  __init__.py   앱 팩토리, CLI 명령
+  __init__.py   app factory, CLI commands
   models.py     User / Challenge / Solve / Submission
-  auth.py       회원가입·로그인
-  main.py       문제, 제출, 스코어보드, 프로필
-  admin.py      관리자 페이지
-  labs.py       실습용 취약 문제들
-  seed.py       기본 문제 세트
+  auth.py       sign up / log in
+  main.py       challenges, submissions, scoreboard, profiles
+  admin.py      admin pages
+  labs.py       intentionally vulnerable labs
+  seed.py       default challenge set
   templates/  static/
 ```

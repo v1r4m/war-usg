@@ -12,7 +12,7 @@
   <div class="body">
     <div class="desc">{{ chal.description }}</div>
     {% if chal.url %}
-    <a class="open-link" href="{{ chal.url }}" target="_blank" rel="noopener noreferrer">문제 페이지 열기 →</a>
+    <a class="open-link" href="{{ chal.url }}" target="_blank" rel="noopener noreferrer">open challenge →</a>
     {% endif %}
   </div>
 </section>
@@ -21,7 +21,7 @@
   <div class="label">flag</div>
   <div class="body">
     {% if solved %}
-      <p class="ink">해결한 문제입니다.</p>
+      <p class="ink">Solved.</p>
     {% else %}
     <form method="post" class="flag-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -43,7 +43,7 @@
       <span class="date">{{ s.solved_at|kst }}</span>
     </div>
     {% else %}
-    <p class="muted">아직 아무도 풀지 못했어요. 퍼스트 블러드를 노려보세요.</p>
+    <p class="muted">No solves yet. Go for first blood.</p>
     {% endfor %}
   </div>
 </section>

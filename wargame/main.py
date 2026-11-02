@@ -87,7 +87,7 @@ def challenge(chal_id):
 
     if request.method == "POST":
         if solved:
-            flash("이미 해결한 문제입니다.", "info")
+            flash("You already solved this one.", "info")
             return redirect(url_for("main.challenge", chal_id=chal.id))
 
         limit = current_app.config["SUBMIT_RATE_LIMIT"]
@@ -96,12 +96,12 @@ def challenge(chal_id):
             Submission.created_at >= utcnow() - timedelta(minutes=1),
         ).count()
         if recent >= limit:
-            flash("제출이 너무 잦습니다. 1분 뒤에 다시 시도하세요.", "error")
+            flash("Too many submissions. Try again in a minute.", "error")
             return redirect(url_for("main.challenge", chal_id=chal.id))
 
         submitted = request.form.get("flag", "").strip()[:256]
         if not submitted:
-            flash("플래그를 입력하세요.", "error")
+            flash("Enter a flag.", "error")
             return redirect(url_for("main.challenge", chal_id=chal.id))
 
         correct = chal.check_flag(submitted)
@@ -119,15 +119,15 @@ def challenge(chal_id):
                 db.session.commit()
             except IntegrityError:
                 db.session.rollback()
-                flash("이미 해결한 문제입니다.", "info")
+                flash("You already solved this one.", "info")
                 return redirect(url_for("main.challenge", chal_id=chal.id))
             if first_blood and not (current_user.is_admin or current_user.hidden):
-                flash(f"퍼스트 블러드! 解 +{chal.points}점", "success")
+                flash(f"First blood! 解 +{chal.points} pts", "success")
             else:
-                flash(f"정답입니다. 解 +{chal.points}점", "success")
+                flash(f"Correct. 解 +{chal.points} pts", "success")
         else:
             db.session.commit()
-            flash("틀렸습니다. 다시 시도해 보세요.", "error")
+            flash("Wrong flag. Try again.", "error")
         return redirect(url_for("main.challenge", chal_id=chal.id))
 
     solvers = [s for s in chal.solves if not s.user.is_admin and not s.user.hidden]
