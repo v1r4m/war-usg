@@ -1,25 +1,30 @@
 {% extends "base.html" %}
 {% block title %}{{ u.username }} · {{ site_name }}{% endblock %}
 {% block content %}
-<section class="card">
-  <h1>{{ u.username }} {% if u.is_admin %}<span class="tag">admin</span>{% endif %}</h1>
-  <div class="stats inline-stats">
-    <div class="stat"><b>{{ u.score }}</b><span>점수</span></div>
-    <div class="stat"><b>{{ rank or '-' }}</b><span>순위</span></div>
-    <div class="stat"><b>{{ solves|length }}</b><span>해결</span></div>
+<div class="chal-head">
+  <h1>{{ u.username }}<span class="dot">.</span> {% if u.is_admin %}<span class="tag">admin</span>{% endif %}</h1>
+  <div class="meta">joined {{ u.created_at|kst }}</div>
+</div>
+
+<section class="sec">
+  <div class="label">rank</div>
+  <div class="body num">
+    <p>{% if rank %}#{{ rank }}{% else %}-{% endif %} · {{ u.score }} pts · {{ solves|length }} solves</p>
   </div>
-  <p class="muted small">가입일 {{ u.created_at|kst }}</p>
 </section>
-<section class="card">
-  <h2>해결한 문제</h2>
-  {% if solves %}
-  <table>
-    <thead><tr><th>문제</th><th>분야</th><th class="num">점수</th><th class="num">시각</th></tr></thead>
+
+<section class="sec">
+  <div class="label">solved</div>
+  <div class="body rows num">
     {% for s in solves %}
-    <tr><td>{{ s.challenge.title }}</td><td><span class="tag">{{ s.challenge.category }}</span></td>
-        <td class="num">{{ s.challenge.points }}</td><td class="num muted small">{{ s.solved_at|kst }}</td></tr>
+    <div class="row">
+      <span class="place">{{ s.challenge.points }}</span>
+      <span class="event"><span class="seal">解</span> {{ s.challenge.title }} <span class="muted small">{{ s.challenge.category }}</span></span>
+      <span class="date">{{ s.solved_at|kst }}</span>
+    </div>
+    {% else %}
+    <p class="muted">아직 해결한 문제가 없습니다.</p>
     {% endfor %}
-  </table>
-  {% else %}<p class="muted">아직 해결한 문제가 없습니다.</p>{% endif %}
+  </div>
 </section>
 {% endblock %}

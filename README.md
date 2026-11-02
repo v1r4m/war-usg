@@ -68,7 +68,7 @@ flask --app run reset-flags   # 내장 문제 플래그 재생성
 |---|---|---|
 | `SECRET_KEY` | 자동 생성 | 세션 서명 키 |
 | `DATABASE_URL` | `sqlite:///instance/wargame.db` | DB 주소 |
-| `SITE_NAME` | `USG Wargame` | 사이트 이름 |
+| `SITE_NAME` | `最強海巨` | 사이트 이름 |
 | `SUBMIT_RATE_LIMIT` | `10` | 1분당 플래그 제출 허용 횟수 |
 | `SESSION_COOKIE_SECURE` | `0` | HTTPS 배포 시 `1` |
 | `TRUSTED_PROXIES` | `0` | 리버스 프록시 개수 (Coolify면 `1`) |

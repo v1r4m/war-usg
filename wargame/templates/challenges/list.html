@@ -1,28 +1,29 @@
 {% extends "base.html" %}
-{% block title %}문제 · {{ site_name }}{% endblock %}
+{% block title %}challenges · {{ site_name }}{% endblock %}
 {% block content %}
-<div class="page-head">
-  <h1>문제</h1>
-  <span class="muted">{{ solved_ids|length }} / {{ total }} 해결</span>
+<div class="page-title">
+  <h1>challenges<span class="dot">.</span></h1>
+  <span class="muted small num">{{ solved_ids|length }} / {{ total }} solved</span>
 </div>
-<div class="progress"><div style="width: {{ (solved_ids|length * 100 / total) if total else 0 }}%"></div></div>
 
 {% for cat, chals in grouped.items() %}
-<h2 class="cat">{{ cat }}</h2>
-<div class="chal-grid">
-  {% for c in chals %}
-  <a class="chal {% if c.id in solved_ids %}solved{% endif %} {% if not c.visible %}hidden-chal{% endif %}"
-     href="{{ url_for('main.challenge', chal_id=c.id) }}">
-    <div class="chal-top">
-      <span class="badge {{ c.difficulty }}">{{ c.difficulty }}</span>
-      {% if c.id in solved_ids %}<span class="ok">✔</span>{% endif %}
+<section class="sec">
+  <div class="label">{{ cat }}</div>
+  <div class="body rows">
+    {% for c in chals %}
+    <div class="row {% if c.id in solved_ids %}solved{% endif %}">
+      <span class="place">{{ c.points }}</span>
+      <span class="event">
+        {% if c.id in solved_ids %}<span class="seal" title="solved">解</span>{% else %}<span class="seal-slot"></span>{% endif %}
+        <a href="{{ url_for('main.challenge', chal_id=c.id) }}">{{ c.title }}</a>
+        <span class="diff {{ c.difficulty }}" title="{{ c.difficulty }}">{{ {'easy': '●', 'medium': '●●', 'hard': '●●●'}.get(c.difficulty, c.difficulty) }}</span>
+        {% if not c.visible %}<span class="tag">hidden</span>{% endif %}
+      </span>
+      <span class="date">{{ counts.get(c.id, 0) }} solves</span>
     </div>
-    <div class="chal-title">{{ c.title }}</div>
-    <div class="chal-meta"><b>{{ c.points }}</b>점 · {{ counts.get(c.id, 0) }}명 해결
-      {% if not c.visible %}<span class="muted">(비공개)</span>{% endif %}</div>
-  </a>
-  {% endfor %}
-</div>
+    {% endfor %}
+  </div>
+</section>
 {% else %}
 <p class="muted">아직 공개된 문제가 없습니다.</p>
 {% endfor %}

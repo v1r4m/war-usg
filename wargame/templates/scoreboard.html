@@ -1,23 +1,24 @@
 {% extends "base.html" %}
-{% block title %}스코어보드 · {{ site_name }}{% endblock %}
+{% block title %}scoreboard · {{ site_name }}{% endblock %}
 {% block content %}
-<h1>스코어보드</h1>
-<section class="card">
-  {% if rows %}
-  <table>
-    <thead><tr><th>#</th><th>참가자</th><th class="num">해결</th><th class="num">점수</th><th class="num">마지막 풀이</th></tr></thead>
-    <tbody>
+<div class="page-title">
+  <h1>scoreboard<span class="dot">.</span></h1>
+  <span class="muted small num">{{ rows|length }} players</span>
+</div>
+
+<section class="sec">
+  <div class="label">rank</div>
+  <div class="body rows num">
     {% for u, score, count, last in rows %}
-    <tr class="{% if current_user.is_authenticated and u.id == current_user.id %}me{% endif %}">
-      <td class="rank">{% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}</td>
-      <td><a href="{{ url_for('main.user', user_id=u.id) }}">{{ u.username }}</a></td>
-      <td class="num">{{ count }}</td>
-      <td class="num"><b>{{ score }}</b></td>
-      <td class="num muted small">{{ last|kst }}</td>
-    </tr>
+    <div class="row {% if loop.index <= 3 %}best{% endif %} {% if current_user.is_authenticated and u.id == current_user.id %}me{% endif %}">
+      <span class="place">#{{ loop.index }}</span>
+      <span class="event"><a href="{{ url_for('main.user', user_id=u.id) }}">{{ u.username }}</a>
+        <span class="muted small">{{ count }} solves</span></span>
+      <span class="date"><b class="ink">{{ score }}</b> pts</span>
+    </div>
+    {% else %}
+    <p class="muted">아직 참가자가 없어요.</p>
     {% endfor %}
-    </tbody>
-  </table>
-  {% else %}<p class="muted">아직 참가자가 없어요.</p>{% endif %}
+  </div>
 </section>
 {% endblock %}

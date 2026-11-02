@@ -1,39 +1,39 @@
 {% extends "base.html" %}
-{% block title %}유저 관리 · {{ site_name }}{% endblock %}
+{% block title %}admin · users · {{ site_name }}{% endblock %}
 {% block content %}
-<h1>유저 관리</h1>
+<div class="page-title"><h1>users<span class="dot">.</span></h1><span class="muted small num">{{ users|length }} users</span></div>
 {% include "admin/_nav.html" %}
-<section class="card">
-  <table>
-    <thead><tr><th>아이디</th><th class="num">점수</th><th>권한</th><th>스코어보드</th><th>가입일</th><th></th></tr></thead>
-    {% for u in users %}
-    <tr>
-      <td><a href="{{ url_for('main.user', user_id=u.id) }}">{{ u.username }}</a></td>
-      <td class="num">{{ u.score }}</td>
-      <td>{% if u.is_admin %}<span class="tag">admin</span>{% else %}user{% endif %}</td>
-      <td>{% if u.hidden %}<span class="muted">숨김</span>{% else %}표시{% endif %}</td>
-      <td class="muted small">{{ u.created_at|kst }}</td>
-      <td class="actions">
-        {% if u.id != current_user.id %}
-        <form method="post" action="{{ url_for('admin.user_toggle_admin', user_id=u.id) }}" class="inline">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="btn small ghost">{{ '관리자 해제' if u.is_admin else '관리자 지정' }}</button>
-        </form>
-        {% endif %}
-        <form method="post" action="{{ url_for('admin.user_toggle_hidden', user_id=u.id) }}" class="inline">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="btn small ghost">{{ '표시' if u.hidden else '숨기기' }}</button>
-        </form>
-        {% if u.id != current_user.id %}
-        <form method="post" action="{{ url_for('admin.user_delete', user_id=u.id) }}" class="inline"
-              onsubmit="return confirm('이 계정을 삭제할까요? 풀이 기록도 함께 삭제됩니다.')">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-          <button class="btn small danger">삭제</button>
-        </form>
-        {% endif %}
-      </td>
-    </tr>
-    {% endfor %}
-  </table>
-</section>
+<div class="table-wrap">
+<table class="num">
+  <thead><tr><th>username</th><th class="num">pts</th><th>role</th><th>board</th><th>joined</th><th></th></tr></thead>
+  {% for u in users %}
+  <tr>
+    <td><a href="{{ url_for('main.user', user_id=u.id) }}">{{ u.username }}</a></td>
+    <td class="num">{{ u.score }}</td>
+    <td>{% if u.is_admin %}<span class="tag">admin</span>{% else %}<span class="muted">user</span>{% endif %}</td>
+    <td>{% if u.hidden %}<span class="muted">hidden</span>{% else %}shown{% endif %}</td>
+    <td class="muted small">{{ u.created_at|kst }}</td>
+    <td class="actions">
+      {% if u.id != current_user.id %}
+      <form method="post" action="{{ url_for('admin.user_toggle_admin', user_id=u.id) }}" class="inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn small ghost">{{ 'unadmin' if u.is_admin else 'make admin' }}</button>
+      </form>
+      {% endif %}
+      <form method="post" action="{{ url_for('admin.user_toggle_hidden', user_id=u.id) }}" class="inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn small ghost">{{ 'show' if u.hidden else 'hide' }}</button>
+      </form>
+      {% if u.id != current_user.id %}
+      <form method="post" action="{{ url_for('admin.user_delete', user_id=u.id) }}" class="inline"
+            onsubmit="return confirm('이 계정을 삭제할까요? 풀이 기록도 함께 삭제됩니다.')">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="btn small danger">delete</button>
+      </form>
+      {% endif %}
+    </td>
+  </tr>
+  {% endfor %}
+</table>
+</div>
 {% endblock %}

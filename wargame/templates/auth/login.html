@@ -1,15 +1,17 @@
 {% extends "base.html" %}
-{% block title %}로그인 · {{ site_name }}{% endblock %}
+{% block title %}login · {{ site_name }}{% endblock %}
 {% block content %}
-<section class="card narrow">
-  <h1>로그인</h1>
-  <form method="post">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>아이디 <input name="username" value="{{ username }}" required autofocus autocomplete="username"></label>
-    <label>비밀번호 <input type="password" name="password" required autocomplete="current-password"></label>
-    <label class="check"><input type="checkbox" name="remember" value="1"> 로그인 유지</label>
-    <button class="btn full">로그인</button>
-  </form>
-  <p class="muted small">계정이 없나요? <a href="{{ url_for('auth.register') }}">회원가입</a></p>
+<section class="sec">
+  <div class="label">login</div>
+  <div class="body">
+    <form method="post" class="stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>username <input name="username" value="{{ username }}" required autofocus autocomplete="username"></label>
+      <label>password <input type="password" name="password" required autocomplete="current-password"></label>
+      <label class="check"><input type="checkbox" name="remember" value="1"> 로그인 유지</label>
+      <button class="btn">login</button>
+    </form>
+    <p class="muted small" style="margin-top:1.2rem">계정이 없나요? <a href="{{ url_for('auth.register') }}">회원가입</a></p>
+  </div>
 </section>
 {% endblock %}

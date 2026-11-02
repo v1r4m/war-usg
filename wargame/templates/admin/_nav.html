@@ -1,6 +1,6 @@
-<nav class="subnav">
-  <a href="{{ url_for('admin.dashboard') }}">대시보드</a>
-  <a href="{{ url_for('admin.challenges') }}">문제 관리</a>
-  <a href="{{ url_for('admin.users') }}">유저 관리</a>
-  <a href="{{ url_for('admin.submissions') }}">제출 로그</a>
+<nav class="links subnav">
+  <a href="{{ url_for('admin.dashboard') }}">dashboard</a><span class="sep">·</span>
+  <a href="{{ url_for('admin.challenges') }}">challenges</a><span class="sep">·</span>
+  <a href="{{ url_for('admin.users') }}">users</a><span class="sep">·</span>
+  <a href="{{ url_for('admin.submissions') }}">submissions</a>
 </nav>

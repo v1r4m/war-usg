@@ -122,9 +122,9 @@ def challenge(chal_id):
                 flash("이미 해결한 문제입니다.", "info")
                 return redirect(url_for("main.challenge", chal_id=chal.id))
             if first_blood and not (current_user.is_admin or current_user.hidden):
-                flash(f"🩸 퍼스트 블러드! +{chal.points}점", "success")
+                flash(f"퍼스트 블러드! 解 +{chal.points}점", "success")
             else:
-                flash(f"정답입니다! +{chal.points}점 🎉", "success")
+                flash(f"정답입니다. 解 +{chal.points}점", "success")
         else:
             db.session.commit()
             flash("틀렸습니다. 다시 시도해 보세요.", "error")

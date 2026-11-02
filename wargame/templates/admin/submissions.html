@@ -1,15 +1,15 @@
 {% extends "base.html" %}
-{% block title %}제출 로그 · {{ site_name }}{% endblock %}
+{% block title %}submissions · {{ site_name }}{% endblock %}
 {% block content %}
-<h1>제출 로그</h1>
+<div class="page-title"><h1>submissions<span class="dot">.</span></h1><span class="muted small">최근 300건</span></div>
 {% include "admin/_nav.html" %}
-<p>
-  <a class="btn small {% if not only %}{% else %}ghost{% endif %}" href="{{ url_for('admin.submissions') }}">전체</a>
-  <a class="btn small {% if only == 'correct' %}{% else %}ghost{% endif %}" href="{{ url_for('admin.submissions', only='correct') }}">정답</a>
-  <a class="btn small {% if only == 'wrong' %}{% else %}ghost{% endif %}" href="{{ url_for('admin.submissions', only='wrong') }}">오답</a>
-  <span class="muted small">최근 300건</span>
-</p>
-<section class="card">
-  {% include "admin/_subs_table.html" with context %}
+<section class="sec">
+  <div class="label">filter</div>
+  <div class="body links">
+    <a href="{{ url_for('admin.submissions') }}" class="{% if not only %}ink{% endif %}">all</a><span class="sep">·</span>
+    <a href="{{ url_for('admin.submissions', only='correct') }}" class="{% if only == 'correct' %}ink{% endif %}">correct</a><span class="sep">·</span>
+    <a href="{{ url_for('admin.submissions', only='wrong') }}" class="{% if only == 'wrong' %}ink{% endif %}">wrong</a>
+  </div>
 </section>
+{% include "admin/_subs_table.html" with context %}
 {% endblock %}

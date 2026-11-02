@@ -1,39 +1,50 @@
 {% extends "base.html" %}
 {% block title %}{{ chal.title }} · {{ site_name }}{% endblock %}
 {% block content %}
-<p><a href="{{ url_for('main.challenges') }}">← 문제 목록</a></p>
-<section class="card">
-  <div class="chal-top">
-    <span class="badge {{ chal.difficulty }}">{{ chal.difficulty }}</span>
-    <span class="tag">{{ chal.category }}</span>
-    <span class="points">{{ chal.points }}점</span>
+<div class="chal-head">
+  <div class="meta"><a href="{{ url_for('main.challenges') }}">challenges</a> / {{ chal.category }}</div>
+  <h1>{{ chal.title }}{% if solved %} <span class="seal big" title="solved">解</span>{% endif %}</h1>
+  <div class="meta num">{{ chal.points }} pts · {{ chal.difficulty }} · {{ solvers|length }} solves</div>
+</div>
+
+<section class="sec">
+  <div class="label">brief</div>
+  <div class="body">
+    <div class="desc">{{ chal.description }}</div>
+    {% if chal.url %}
+    <a class="open-link" href="{{ chal.url }}" target="_blank" rel="noopener noreferrer">문제 페이지 열기 →</a>
+    {% endif %}
   </div>
-  <h1>{{ chal.title }} {% if solved %}<span class="ok">✔ 해결</span>{% endif %}</h1>
-  <div class="desc">{{ chal.description }}</div>
-
-  {% if chal.url %}
-  <p><a class="btn ghost" href="{{ chal.url }}" target="_blank" rel="noopener noreferrer">🔗 문제 페이지 열기</a></p>
-  {% endif %}
-
-  {% if not solved %}
-  <form method="post" class="flag-form">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <input name="flag" placeholder="USG{...}" required maxlength="256" autocomplete="off" spellcheck="false">
-    <button class="btn">제출</button>
-  </form>
-  {% endif %}
 </section>
 
-<section class="card">
-  <h2>해결한 사람 ({{ solvers|length }})</h2>
-  {% if solvers %}
-  <table>
+<section class="sec">
+  <div class="label">flag</div>
+  <div class="body">
+    {% if solved %}
+      <p class="ink">해결한 문제입니다.</p>
+    {% else %}
+    <form method="post" class="flag-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <input name="flag" placeholder="USG{...}" required maxlength="256" autocomplete="off" spellcheck="false" aria-label="flag">
+      <button class="btn">submit</button>
+    </form>
+    {% endif %}
+  </div>
+</section>
+
+<section class="sec">
+  <div class="label">solvers</div>
+  <div class="body rows">
     {% for s in solvers %}
-    <tr><td class="rank">{% if loop.first %}🩸{% else %}{{ loop.index }}{% endif %}</td>
-        <td><a href="{{ url_for('main.user', user_id=s.user.id) }}">{{ s.user.username }}</a></td>
-        <td class="muted small num">{{ s.solved_at|kst }}</td></tr>
+    <div class="row {% if loop.first %}best{% endif %}">
+      <span class="place">{% if loop.first %}1st{% else %}#{{ loop.index }}{% endif %}</span>
+      <span class="event"><a href="{{ url_for('main.user', user_id=s.user.id) }}">{{ s.user.username }}</a>
+        {% if loop.first %}<span class="bad small">first blood</span>{% endif %}</span>
+      <span class="date">{{ s.solved_at|kst }}</span>
+    </div>
+    {% else %}
+    <p class="muted">아직 아무도 풀지 못했어요. 퍼스트 블러드를 노려보세요.</p>
     {% endfor %}
-  </table>
-  {% else %}<p class="muted">아직 아무도 풀지 못했어요. 퍼스트 블러드를 노려보세요!</p>{% endif %}
+  </div>
 </section>
 {% endblock %}

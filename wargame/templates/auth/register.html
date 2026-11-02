@@ -1,16 +1,18 @@
 {% extends "base.html" %}
-{% block title %}회원가입 · {{ site_name }}{% endblock %}
+{% block title %}join · {{ site_name }}{% endblock %}
 {% block content %}
-<section class="card narrow">
-  <h1>회원가입</h1>
-  <form method="post">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-    <label>아이디 <input name="username" value="{{ username }}" required autofocus
-           pattern="[A-Za-z0-9_\-]{3,20}" title="3~20자 영문, 숫자, _, -" autocomplete="username"></label>
-    <label>비밀번호 <input type="password" name="password" required minlength="8" autocomplete="new-password"></label>
-    <label>비밀번호 확인 <input type="password" name="confirm" required minlength="8" autocomplete="new-password"></label>
-    <button class="btn full">가입하기</button>
-  </form>
-  <p class="muted small">이미 계정이 있나요? <a href="{{ url_for('auth.login') }}">로그인</a></p>
+<section class="sec">
+  <div class="label">join</div>
+  <div class="body">
+    <form method="post" class="stack">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+      <label>username <input name="username" value="{{ username }}" required autofocus
+             pattern="[A-Za-z0-9_\-]{3,20}" title="3~20자 영문, 숫자, _, -" autocomplete="username"></label>
+      <label>password <input type="password" name="password" required minlength="8" autocomplete="new-password"></label>
+      <label>confirm <input type="password" name="confirm" required minlength="8" autocomplete="new-password"></label>
+      <button class="btn">join</button>
+    </form>
+    <p class="muted small" style="margin-top:1.2rem">이미 계정이 있나요? <a href="{{ url_for('auth.login') }}">로그인</a></p>
+  </div>
 </section>
 {% endblock %}

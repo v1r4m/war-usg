@@ -54,7 +54,7 @@ def create_app(test_config=None):
         SESSION_COOKIE_SECURE=os.environ.get("SESSION_COOKIE_SECURE") == "1",
         REMEMBER_COOKIE_HTTPONLY=True,
         PERMANENT_SESSION_LIFETIME=timedelta(days=7),
-        SITE_NAME=os.environ.get("SITE_NAME", "USG Wargame"),
+        SITE_NAME=os.environ.get("SITE_NAME", "最強海巨"),
         # 1분에 허용할 플래그 제출 횟수 (브루트포스 방지)
         SUBMIT_RATE_LIMIT=int(os.environ.get("SUBMIT_RATE_LIMIT", "10")),
     )

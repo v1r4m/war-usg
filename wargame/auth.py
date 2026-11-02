@@ -53,7 +53,7 @@ def register():
         db.session.add(user)
         db.session.commit()
         login_user(user)
-        flash(f"환영합니다, {username}! 첫 문제부터 시작해 보세요 🚩", "success")
+        flash(f"환영합니다, {username}! 첫 문제부터 시작해 보세요.", "success")
         return redirect(url_for("main.challenges"))
 
     return render_template("auth/register.html", username="")

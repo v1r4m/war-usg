@@ -1,45 +1,56 @@
 {% extends "base.html" %}
 {% block content %}
-<section class="hero">
-  <h1>Capture The Flag 🚩</h1>
-  <p class="muted">웹 해킹, 암호, 포렌식… 문제를 풀고 <code>USG{...}</code> 플래그를 찾아 제출하세요.</p>
-  {% if current_user.is_authenticated %}
-    <a class="btn" href="{{ url_for('main.challenges') }}">문제 풀러 가기 →</a>
-  {% else %}
-    <a class="btn" href="{{ url_for('auth.register') }}">지금 시작하기 →</a>
-    <a class="btn ghost" href="{{ url_for('auth.login') }}">로그인</a>
-  {% endif %}
-</section>
-
-<section class="stats">
-  <div class="stat"><b>{{ stats.challenges }}</b><span>문제</span></div>
-  <div class="stat"><b>{{ stats.users }}</b><span>참가자</span></div>
-  <div class="stat"><b>{{ stats.solves }}</b><span>총 풀이</span></div>
-</section>
-
-<div class="grid2">
-  <section class="card">
-    <h2>🏆 Top 5</h2>
-    {% if top %}
-    <table>
-      {% for u, score, count, last in top %}
-      <tr><td class="rank">{{ loop.index }}</td>
-          <td><a href="{{ url_for('main.user', user_id=u.id) }}">{{ u.username }}</a></td>
-          <td class="num">{{ score }}점</td></tr>
-      {% endfor %}
-    </table>
-    {% else %}<p class="muted">아직 참가자가 없어요.</p>{% endif %}
-  </section>
-  <section class="card">
-    <h2>⚡ 최근 풀이</h2>
-    {% if recent %}
-    <ul class="feed">
-      {% for s in recent %}
-      <li><a href="{{ url_for('main.user', user_id=s.user.id) }}">{{ s.user.username }}</a>
-          님이 <b>{{ s.challenge.title }}</b> 해결 <span class="muted small">{{ s.solved_at|kst }}</span></li>
-      {% endfor %}
-    </ul>
-    {% else %}<p class="muted">첫 번째 해결자가 되어 보세요!</p>{% endif %}
-  </section>
+<div class="lede">
+  <img class="hero" src="{{ url_for('static', filename='main.webp') }}" alt="最強海巨 — 최강해거, Ultimate Sea Giant" width="1024" height="559">
+  <h1>{{ site_name }}<span class="dot">.</span></h1>
+  <div class="sub">최강해거 · Ultimate Sea Giant</div>
+  <div class="sub">wargame — 문제를 풀고 <span class="mono">USG{...}</span> 를 찾아오세요</div>
+  <div class="links">
+    {% if current_user.is_authenticated %}
+      <a href="{{ url_for('main.challenges') }}">문제 풀러 가기 →</a>
+    {% else %}
+      <a href="{{ url_for('auth.register') }}">시작하기 →</a>
+      <span class="sep">·</span>
+      <a href="{{ url_for('auth.login') }}">로그인</a>
+    {% endif %}
+  </div>
 </div>
+
+<section class="sec">
+  <div class="label">board</div>
+  <div class="body num">
+    <p>{{ stats.challenges }} challenges · {{ stats.users }} players · {{ stats.solves }} solves</p>
+  </div>
+</section>
+
+<section class="sec">
+  <div class="label">top</div>
+  <div class="body rows">
+    {% for u, score, count, last in top %}
+    <div class="row {% if loop.first %}best{% endif %}">
+      <span class="place">#{{ loop.index }}</span>
+      <span class="event"><a href="{{ url_for('main.user', user_id=u.id) }}">{{ u.username }}</a></span>
+      <span class="date">{{ score }} pts</span>
+    </div>
+    {% else %}
+    <p class="muted">아직 참가자가 없어요.</p>
+    {% endfor %}
+    {% if top %}<div class="total"><a href="{{ url_for('main.scoreboard_page') }}">전체 순위 →</a></div>{% endif %}
+  </div>
+</section>
+
+<section class="sec">
+  <div class="label">recent</div>
+  <div class="body rows">
+    {% for s in recent %}
+    <div class="row">
+      <span class="event"><a href="{{ url_for('main.user', user_id=s.user.id) }}">{{ s.user.username }}</a>
+        <span class="muted">solved</span> {{ s.challenge.title }}</span>
+      <span class="date">{{ s.solved_at|kst }}</span>
+    </div>
+    {% else %}
+    <p class="muted">첫 번째 해결자가 되어 보세요.</p>
+    {% endfor %}
+  </div>
+</section>
 {% endblock %}

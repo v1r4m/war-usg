@@ -1,16 +1,17 @@
 {% extends "base.html" %}
-{% block title %}관리자 · {{ site_name }}{% endblock %}
+{% block title %}admin · {{ site_name }}{% endblock %}
 {% block content %}
-<h1>관리자</h1>
+<div class="page-title"><h1>admin<span class="dot">.</span></h1></div>
 {% include "admin/_nav.html" %}
-<section class="stats">
-  <div class="stat"><b>{{ stats.users }}</b><span>유저</span></div>
-  <div class="stat"><b>{{ stats.challenges }}</b><span>문제</span></div>
-  <div class="stat"><b>{{ stats.solves }}</b><span>풀이</span></div>
-  <div class="stat"><b>{{ stats.submissions }}</b><span>제출 (오답 {{ stats.wrong }})</span></div>
+<section class="sec">
+  <div class="label">stats</div>
+  <div class="body num">
+    <p>{{ stats.users }} users · {{ stats.challenges }} challenges · {{ stats.solves }} solves</p>
+    <p><span class="when">submissions</span> {{ stats.submissions }} · <span class="bad">{{ stats.wrong }} wrong</span></p>
+  </div>
 </section>
-<section class="card">
-  <h2>최근 제출</h2>
-  {% include "admin/_subs_table.html" with context %}
+<section class="sec">
+  <div class="label">recent</div>
+  <div class="body">{% include "admin/_subs_table.html" with context %}</div>
 </section>
 {% endblock %}

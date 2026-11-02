@@ -3,38 +3,50 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>{% block title %}{{ site_name }}{% endblock %}</title>
+  <title>{% block title %}{{ site_name }} · wargame{% endblock %}</title>
+  <meta property="og:title" content="{{ site_name }} · wargame">
+  <meta property="og:image" content="{{ url_for('static', filename='main.webp', _external=True) }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tinos:wght@400;700&family=Noto+Serif+KR:wght@400;500;700&family=Noto+Serif+JP:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-<header class="nav">
-  <a class="brand" href="{{ url_for('main.index') }}">🌊 {{ site_name }}</a>
-  <nav>
-    <a href="{{ url_for('main.challenges') }}">문제</a>
-    <a href="{{ url_for('main.scoreboard_page') }}">스코어보드</a>
-    {% if current_user.is_authenticated %}
-      {% if current_user.is_admin %}<a class="admin-link" href="{{ url_for('admin.dashboard') }}">관리자</a>{% endif %}
-      <a href="{{ url_for('main.user', user_id=current_user.id) }}">{{ current_user.username }} · {{ current_user.score }}점</a>
-      <form method="post" action="{{ url_for('auth.logout') }}" class="inline">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-        <button class="link">로그아웃</button>
-      </form>
-    {% else %}
-      <a href="{{ url_for('auth.login') }}">로그인</a>
-      <a class="btn small" href="{{ url_for('auth.register') }}">회원가입</a>
-    {% endif %}
-  </nav>
-</header>
+<div class="wrap">
+  <header class="site-head">
+    <a class="brand" href="{{ url_for('main.index') }}">
+      <span class="brand-name">{{ site_name }}<span class="dot">.</span></span>
+      <span class="brand-sub">wargame</span>
+    </a>
+    <nav class="links">
+      <a href="{{ url_for('main.challenges') }}">challenges</a>
+      <span class="sep">·</span>
+      <a href="{{ url_for('main.scoreboard_page') }}">scoreboard</a>
+      <span class="sep">·</span>
+      {% if current_user.is_authenticated %}
+        {% if current_user.is_admin %}<a class="admin-link" href="{{ url_for('admin.dashboard') }}">admin</a><span class="sep">·</span>{% endif %}
+        <a href="{{ url_for('main.user', user_id=current_user.id) }}">{{ current_user.username }} <span class="muted num">{{ current_user.score }}</span></a>
+        <span class="sep">·</span>
+        <form method="post" action="{{ url_for('auth.logout') }}" class="inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="linklike">logout</button>
+        </form>
+      {% else %}
+        <a href="{{ url_for('auth.login') }}">login</a>
+        <span class="sep">·</span>
+        <a href="{{ url_for('auth.register') }}">join</a>
+      {% endif %}
+    </nav>
+  </header>
 
-<main class="container">
-  {% with messages = get_flashed_messages(with_categories=true) %}
-    {% for cat, msg in messages %}
-      <div class="flash {{ cat }}">{{ msg }}</div>
-    {% endfor %}
-  {% endwith %}
-  {% block content %}{% endblock %}
-</main>
+  <main>
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% for cat, msg in messages %}<div class="flash {{ cat }}">{{ msg }}</div>{% endfor %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
 
-<footer class="footer">{{ site_name }} · Flask Wargame</footer>
+  <footer class="site-foot">{{ site_name }} · Ultimate Sea Giant · wargame</footer>
+</div>
 </body>
 </html>

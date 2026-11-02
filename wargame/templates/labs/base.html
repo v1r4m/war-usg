@@ -7,12 +7,14 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body class="lab">
-<header class="nav">
-  <span class="brand">🧪 {% block lab_name %}Lab{% endblock %}</span>
-  <nav><a href="{{ url_for('main.challenges') }}">← 워게임으로</a></nav>
-</header>
-<main class="container">
-  {% block content %}{% endblock %}
-</main>
+<div class="wrap">
+  <header class="site-head">
+    <span class="brand"><span class="brand-name">{% block lab_name %}Lab{% endblock %}</span></span>
+    <nav class="links"><a href="{{ url_for('main.challenges') }}">← wargame</a></nav>
+  </header>
+  <main>
+    {% block content %}{% endblock %}
+  </main>
+</div>
 </body>
 </html>
