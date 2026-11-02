@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}{{ chal.title }} · {{ site_name }}{% endblock %}
+{% block content %}
+<p><a href="{{ url_for('main.challenges') }}">← 문제 목록</a></p>
+<section class="card">
+  <div class="chal-top">
+    <span class="badge {{ chal.difficulty }}">{{ chal.difficulty }}</span>
+    <span class="tag">{{ chal.category }}</span>
+    <span class="points">{{ chal.points }}점</span>
+  </div>
+  <h1>{{ chal.title }} {% if solved %}<span class="ok">✔ 해결</span>{% endif %}</h1>
+  <div class="desc">{{ chal.description }}</div>
+
+  {% if chal.url %}
+  <p><a class="btn ghost" href="{{ chal.url }}" target="_blank" rel="noopener noreferrer">🔗 문제 페이지 열기</a></p>
+  {% endif %}
+
+  {% if not solved %}
+  <form method="post" class="flag-form">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input name="flag" placeholder="USG{...}" required maxlength="256" autocomplete="off" spellcheck="false">
+    <button class="btn">제출</button>
+  </form>
+  {% endif %}
+</section>
+
+<section class="card">
+  <h2>해결한 사람 ({{ solvers|length }})</h2>
+  {% if solvers %}
+  <table>
+    {% for s in solvers %}
+    <tr><td class="rank">{% if loop.first %}🩸{% else %}{{ loop.index }}{% endif %}</td>
+        <td><a href="{{ url_for('main.user', user_id=s.user.id) }}">{{ s.user.username }}</a></td>
+        <td class="muted small num">{{ s.solved_at|kst }}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="muted">아직 아무도 풀지 못했어요. 퍼스트 블러드를 노려보세요!</p>{% endif %}
+</section>
+{% endblock %}

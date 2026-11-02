@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block title %}{{ u.username }} · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>{{ u.username }} {% if u.is_admin %}<span class="tag">admin</span>{% endif %}</h1>
+  <div class="stats inline-stats">
+    <div class="stat"><b>{{ u.score }}</b><span>점수</span></div>
+    <div class="stat"><b>{{ rank or '-' }}</b><span>순위</span></div>
+    <div class="stat"><b>{{ solves|length }}</b><span>해결</span></div>
+  </div>
+  <p class="muted small">가입일 {{ u.created_at|kst }}</p>
+</section>
+<section class="card">
+  <h2>해결한 문제</h2>
+  {% if solves %}
+  <table>
+    <thead><tr><th>문제</th><th>분야</th><th class="num">점수</th><th class="num">시각</th></tr></thead>
+    {% for s in solves %}
+    <tr><td>{{ s.challenge.title }}</td><td><span class="tag">{{ s.challenge.category }}</span></td>
+        <td class="num">{{ s.challenge.points }}</td><td class="num muted small">{{ s.solved_at|kst }}</td></tr>
+    {% endfor %}
+  </table>
+  {% else %}<p class="muted">아직 해결한 문제가 없습니다.</p>{% endif %}
+</section>
+{% endblock %}

@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>Capture The Flag 🚩</h1>
+  <p class="muted">웹 해킹, 암호, 포렌식… 문제를 풀고 <code>USG{...}</code> 플래그를 찾아 제출하세요.</p>
+  {% if current_user.is_authenticated %}
+    <a class="btn" href="{{ url_for('main.challenges') }}">문제 풀러 가기 →</a>
+  {% else %}
+    <a class="btn" href="{{ url_for('auth.register') }}">지금 시작하기 →</a>
+    <a class="btn ghost" href="{{ url_for('auth.login') }}">로그인</a>
+  {% endif %}
+</section>
+
+<section class="stats">
+  <div class="stat"><b>{{ stats.challenges }}</b><span>문제</span></div>
+  <div class="stat"><b>{{ stats.users }}</b><span>참가자</span></div>
+  <div class="stat"><b>{{ stats.solves }}</b><span>총 풀이</span></div>
+</section>
+
+<div class="grid2">
+  <section class="card">
+    <h2>🏆 Top 5</h2>
+    {% if top %}
+    <table>
+      {% for u, score, count, last in top %}
+      <tr><td class="rank">{{ loop.index }}</td>
+          <td><a href="{{ url_for('main.user', user_id=u.id) }}">{{ u.username }}</a></td>
+          <td class="num">{{ score }}점</td></tr>
+      {% endfor %}
+    </table>
+    {% else %}<p class="muted">아직 참가자가 없어요.</p>{% endif %}
+  </section>
+  <section class="card">
+    <h2>⚡ 최근 풀이</h2>
+    {% if recent %}
+    <ul class="feed">
+      {% for s in recent %}
+      <li><a href="{{ url_for('main.user', user_id=s.user.id) }}">{{ s.user.username }}</a>
+          님이 <b>{{ s.challenge.title }}</b> 해결 <span class="muted small">{{ s.solved_at|kst }}</span></li>
+      {% endfor %}
+    </ul>
+    {% else %}<p class="muted">첫 번째 해결자가 되어 보세요!</p>{% endif %}
+  </section>
+</div>
+{% endblock %}

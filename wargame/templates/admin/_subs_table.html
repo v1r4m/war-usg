@@ -1,0 +1,16 @@
+{% set rows = subs if subs is defined else recent %}
+{% if rows %}
+<table>
+  <thead><tr><th>시각</th><th>유저</th><th>문제</th><th>제출값</th><th>결과</th><th>IP</th></tr></thead>
+  {% for s in rows %}
+  <tr>
+    <td class="muted small">{{ s.created_at|kst }}</td>
+    <td>{{ s.user.username }}</td>
+    <td>{{ s.challenge.title }}</td>
+    <td><code class="trunc">{{ s.content }}</code></td>
+    <td>{% if s.correct %}<span class="ok">정답</span>{% else %}<span class="bad">오답</span>{% endif %}</td>
+    <td class="muted small">{{ s.ip }}</td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}<p class="muted">제출 기록이 없습니다.</p>{% endif %}

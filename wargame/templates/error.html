@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} · {{ site_name }}{% endblock %}
+{% block content %}
+<section class="hero">
+  <h1>{{ code }}</h1>
+  <p class="muted">{{ message }}</p>
+  <a class="btn" href="{{ url_for('main.index') }}">홈으로</a>
+</section>
+{% endblock %}

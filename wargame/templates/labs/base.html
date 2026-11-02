@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Lab{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body class="lab">
+<header class="nav">
+  <span class="brand">🧪 {% block lab_name %}Lab{% endblock %}</span>
+  <nav><a href="{{ url_for('main.challenges') }}">← 워게임으로</a></nav>
+</header>
+<main class="container">
+  {% block content %}{% endblock %}
+</main>
+</body>
+</html>

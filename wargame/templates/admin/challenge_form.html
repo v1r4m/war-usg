@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}{{ '새 문제' if is_new else '문제 수정' }} · {{ site_name }}{% endblock %}
+{% block content %}
+<h1>{{ '새 문제' if is_new else '문제 수정' }}</h1>
+{% include "admin/_nav.html" %}
+<section class="card">
+  {% if chal.lab_key %}<p class="flash info">내장 실습 문제(<code>{{ chal.lab_key }}</code>)입니다. 플래그를 바꾸면 실습 페이지에도 즉시 반영됩니다.</p>{% endif %}
+  <form method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <label>제목 <input name="title" value="{{ chal.title or '' }}" required maxlength="100"></label>
+    <div class="row">
+      <label>분야
+        <input name="category" value="{{ chal.category }}" list="cats" required maxlength="32">
+        <datalist id="cats">{% for c in categories %}<option value="{{ c }}">{% endfor %}</datalist>
+      </label>
+      <label>난이도
+        <select name="difficulty">
+          {% for d in difficulties %}<option value="{{ d }}" {% if chal.difficulty == d %}selected{% endif %}>{{ d }}</option>{% endfor %}
+        </select>
+      </label>
+      <label>점수 <input type="number" name="points" value="{{ chal.points }}" min="0" max="10000" required></label>
+    </div>
+    <label>설명 <textarea name="description" rows="8">{{ chal.description or '' }}</textarea></label>
+    <label>플래그 <input name="flag" value="{{ chal.flag or '' }}" required maxlength="256" placeholder="USG{...}" autocomplete="off"></label>
+    <label>문제 URL (선택) <input name="url" value="{{ chal.url or '' }}" placeholder="/labs/... 또는 https://..."></label>
+    <label class="check"><input type="checkbox" name="visible" value="1" {% if chal.visible %}checked{% endif %}> 공개</label>
+    <button class="btn">{{ '만들기' if is_new else '저장' }}</button>
+    <a class="btn ghost" href="{{ url_for('admin.challenges') }}">취소</a>
+  </form>
+</section>
+{% endblock %}

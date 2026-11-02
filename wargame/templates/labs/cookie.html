@@ -1,0 +1,17 @@
+{% extends "labs/base.html" %}
+{% block title %}쿠키 몬스터{% endblock %}
+{% block lab_name %}쿠키 몬스터{% endblock %}
+{% block content %}
+<section class="card">
+  <h1>🍪 회원 전용 페이지</h1>
+  {% if error %}
+    <p class="flash error">{{ error }}</p>
+  {% elif is_admin %}
+    <p>관리자님 어서오세요! 요청하신 비밀 정보입니다.</p>
+    <p class="flag-box">{{ flag }}</p>
+  {% else %}
+    <p>안녕하세요, <b>{{ profile.get('user') }}</b> 님! 현재 권한: <code>{{ profile.get('role') }}</code></p>
+    <p class="muted">비밀 정보는 <code>admin</code> 권한이 있어야 볼 수 있습니다.</p>
+  {% endif %}
+</section>
+{% endblock %}

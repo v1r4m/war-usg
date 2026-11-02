@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}{{ site_name }}{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="{{ url_for('main.index') }}">🌊 {{ site_name }}</a>
+  <nav>
+    <a href="{{ url_for('main.challenges') }}">문제</a>
+    <a href="{{ url_for('main.scoreboard_page') }}">스코어보드</a>
+    {% if current_user.is_authenticated %}
+      {% if current_user.is_admin %}<a class="admin-link" href="{{ url_for('admin.dashboard') }}">관리자</a>{% endif %}
+      <a href="{{ url_for('main.user', user_id=current_user.id) }}">{{ current_user.username }} · {{ current_user.score }}점</a>
+      <form method="post" action="{{ url_for('auth.logout') }}" class="inline">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+        <button class="link">로그아웃</button>
+      </form>
+    {% else %}
+      <a href="{{ url_for('auth.login') }}">로그인</a>
+      <a class="btn small" href="{{ url_for('auth.register') }}">회원가입</a>
+    {% endif %}
+  </nav>
+</header>
+
+<main class="container">
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="flash {{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+  {% block content %}{% endblock %}
+</main>
+
+<footer class="footer">{{ site_name }} · Flask Wargame</footer>
+</body>
+</html>

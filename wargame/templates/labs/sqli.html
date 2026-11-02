@@ -1,0 +1,25 @@
+{% extends "labs/base.html" %}
+{% block title %}SQL 로그인{% endblock %}
+{% block lab_name %}SQL 로그인{% endblock %}
+{% block content %}
+<section class="card narrow">
+  <h1>🔑 로그인</h1>
+  <p class="muted small">테스트 계정: guest / guest</p>
+  <form method="post">
+    <label>아이디 <input name="username" value="{{ username }}" autocomplete="off"></label>
+    <label>비밀번호 <input name="password" type="password"></label>
+    <button class="btn full">로그인</button>
+  </form>
+</section>
+{% if query %}
+<section class="card">
+  <h2>디버그 모드 🐞</h2>
+  <p class="muted small">실행된 쿼리:</p>
+  <pre>{{ query }}</pre>
+  {% if error %}<p class="flash error">{{ error }}</p>{% endif %}
+  {% if result %}<p class="flash success">{{ result }} 님으로 로그인했습니다.</p>{% endif %}
+  {% if flag %}<p class="flag-box">{{ flag }}</p>
+  {% elif result %}<p class="muted">admin 계정이 아니라서 보여줄 게 없네요.</p>{% endif %}
+</section>
+{% endif %}
+{% endblock %}

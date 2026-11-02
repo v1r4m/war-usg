@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}스코어보드 · {{ site_name }}{% endblock %}
+{% block content %}
+<h1>스코어보드</h1>
+<section class="card">
+  {% if rows %}
+  <table>
+    <thead><tr><th>#</th><th>참가자</th><th class="num">해결</th><th class="num">점수</th><th class="num">마지막 풀이</th></tr></thead>
+    <tbody>
+    {% for u, score, count, last in rows %}
+    <tr class="{% if current_user.is_authenticated and u.id == current_user.id %}me{% endif %}">
+      <td class="rank">{% if loop.index == 1 %}🥇{% elif loop.index == 2 %}🥈{% elif loop.index == 3 %}🥉{% else %}{{ loop.index }}{% endif %}</td>
+      <td><a href="{{ url_for('main.user', user_id=u.id) }}">{{ u.username }}</a></td>
+      <td class="num">{{ count }}</td>
+      <td class="num"><b>{{ score }}</b></td>
+      <td class="num muted small">{{ last|kst }}</td>
+    </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}<p class="muted">아직 참가자가 없어요.</p>{% endif %}
+</section>
+{% endblock %}

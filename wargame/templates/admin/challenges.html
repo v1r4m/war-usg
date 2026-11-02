@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}문제 관리 · {{ site_name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>문제 관리</h1>
+  <a class="btn" href="{{ url_for('admin.challenge_new') }}">+ 새 문제</a>
+</div>
+{% include "admin/_nav.html" %}
+<section class="card">
+  <table>
+    <thead><tr><th>제목</th><th>분야</th><th>난이도</th><th class="num">점수</th><th class="num">해결</th><th>상태</th><th></th></tr></thead>
+    {% for c in chals %}
+    <tr>
+      <td><a href="{{ url_for('main.challenge', chal_id=c.id) }}">{{ c.title }}</a>
+          {% if c.lab_key %}<span class="tag">lab</span>{% endif %}</td>
+      <td>{{ c.category }}</td>
+      <td><span class="badge {{ c.difficulty }}">{{ c.difficulty }}</span></td>
+      <td class="num">{{ c.points }}</td>
+      <td class="num">{{ c.solves|length }}</td>
+      <td>{% if c.visible %}<span class="ok">공개</span>{% else %}<span class="muted">비공개</span>{% endif %}</td>
+      <td class="actions">
+        <a class="btn small ghost" href="{{ url_for('admin.challenge_edit', chal_id=c.id) }}">수정</a>
+        <form method="post" action="{{ url_for('admin.challenge_toggle', chal_id=c.id) }}" class="inline">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn small ghost">{{ '숨기기' if c.visible else '공개' }}</button>
+        </form>
+        {% if not c.lab_key %}
+        <form method="post" action="{{ url_for('admin.challenge_delete', chal_id=c.id) }}" class="inline"
+              onsubmit="return confirm('정말 삭제할까요? 풀이 기록도 함께 삭제됩니다.')">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+          <button class="btn small danger">삭제</button>
+        </form>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+</section>
+{% endblock %}
