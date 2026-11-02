@@ -67,6 +67,16 @@ DEFAULTS = [
         "crypto", "Double Cipher", "crypto", "easy", 100, None,
         _crypto_desc,
     ),
+    (
+        "s3versions", "Deleted, Not Gone", "cloud", "medium", 200, "/labs/s3web/",
+        lambda f: (
+            "Ocean Corp moved its employee portal to S3 static website hosting.\n"
+            "Last month an incident report went up by mistake, but the security team says\n"
+            "\"we deleted it right away, so it's fine.\"\n\n"
+            "Is it really gone? 🪣\n\n"
+            "(The bucket is simulated inside the wargame. No AWS account needed.)"
+        ),
+    ),
 ]
 
 # Earlier versions shipped Korean titles. Built-in challenges still carrying one of these

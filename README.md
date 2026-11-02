@@ -10,7 +10,7 @@ A hacking wargame (CTF) platform built with Flask.
 - **Scoreboard / user profiles**: ties go to whoever got there first
 - **Admin pages**: dashboard, create / edit / hide / delete challenges, user management, submission log
 - **Slash intro**: the team artwork waves like a flag on the home page; drag (or click) to slice it open
-- **8 built-in labs**: flags are randomly generated on every install
+- **9 built-in labs**: flags are randomly generated on every install
 
 | Challenge | Category | Difficulty | Topic |
 |---|---|---|---|
@@ -22,9 +22,10 @@ A hacking wargame (CTF) platform built with Flask.
 | Someone Else's Notes | web | medium | IDOR |
 | SQL Login | web | medium | SQL injection |
 | File Viewer | web | hard | Path traversal filter bypass |
+| Deleted, Not Gone | cloud | medium | S3 versioning (delete markers, `ListBucketVersions`) |
 
 > The labs are **intentionally vulnerable** for learning, but isolated so the server itself stays safe.
-> SQLi only touches a fresh in-memory DB per request, and path traversal reads from a virtual filesystem, never the real disk.
+> SQLi only touches a fresh in-memory DB per request, path traversal reads from a virtual filesystem, never the real disk, and the S3 lab imitates a bucket in memory without touching AWS.
 
 ## Run locally
 ```bash
