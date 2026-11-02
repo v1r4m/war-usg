@@ -145,5 +145,23 @@ def create_app(test_config=None):
 
         n = regenerate_lab_flags()
         click.echo(f"Regenerated flags for {n} challenges.")
+        from .s3lab import bucket_name, fixed_flag
+
+        if bucket_name() and not fixed_flag():
+            click.echo("S3_LAB_FLAG is not set: run `flask s3-script` again and re-upload the bucket.")
+
+    @app.cli.command("s3-script")
+    @click.option("--purge-only", is_flag=True, help="Only empty the bucket (e.g. before deleting it).")
+    def s3_script(purge_only):
+        """Print a script for AWS CloudShell that uploads the S3 lab (with its flag) to S3_LAB_BUCKET."""
+        from .models import Challenge
+        from .s3lab import LAB_KEY, bucket_name, cloudshell_script
+
+        if not bucket_name():
+            raise click.ClickException("Set S3_LAB_BUCKET first.")
+        chal = Challenge.query.filter_by(lab_key=LAB_KEY).first()
+        if chal is None:
+            raise click.ClickException("The S3 lab challenge does not exist.")
+        click.echo(cloudshell_script(chal.flag, purge_only=purge_only), nl=False)
 
     return app

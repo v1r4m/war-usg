@@ -12,6 +12,7 @@ import binascii
 import hashlib
 import html
 import json
+import os
 import posixpath
 import secrets
 import sqlite3
@@ -204,6 +205,8 @@ def files():
 
 
 # ---------- 7. Deleted, Not Gone (S3 versioning, in-memory bucket) ----------
+# With S3_LAB_BUCKET set, the same content is uploaded to a real bucket (see s3lab.py)
+# and these in-memory routes are turned off.
 
 S3_BUCKET = "ocean-corp-portal"
 S3_REGION = "ap-northeast-2"
@@ -219,21 +222,21 @@ _S3_STYLE = (
 )
 
 
-def _s3_page(title, body):
-    # The stylesheet is pulled straight from the bucket's REST endpoint, which leaks the bucket name.
-    return (
-        f"<!doctype html><html><head><meta charset='utf-8'><title>{title}</title>"
-        f"<link rel='stylesheet' href='{S3_REST}/assets/style.css'></head><body>"
-        f"<header><h1>Ocean Corp Employee Portal</h1>"
-        f"<nav>Home · Notices · Directory · Benefits · IT Helpdesk · <a href='/challenges'>← wargame</a></nav></header>"
-        f"<main>{body}</main></body></html>"
-    )
-
-
-def _s3_objects():
+def s3_lab_objects(flag, rest_base=S3_REST, web_base=S3_WEB, back_link="/challenges"):
     """key -> versions, oldest first. Each version is (last_modified, body) or (last_modified, None) for a delete marker."""
-    flag = flag_for("s3versions")
-    report = _s3_page("Security Incident Postmortem - 2026-08", (
+
+    def page(title, body):
+        # The stylesheet is pulled straight from the bucket's REST endpoint, which leaks the bucket name.
+        back = f" · <a href='{back_link}'>← wargame</a>" if back_link else ""
+        return (
+            f"<!doctype html><html><head><meta charset='utf-8'><title>{title}</title>"
+            f"<link rel='stylesheet' href='{rest_base}/assets/style.css'></head><body>"
+            f"<header><h1>Ocean Corp Employee Portal</h1>"
+            f"<nav>Home · Notices · Directory · Benefits · IT Helpdesk{back}</nav></header>"
+            f"<main>{body}</main></body></html>"
+        )
+
+    report = page("Security Incident Postmortem - 2026-08", (
         "<h2>Security incident postmortem (2026-08)</h2>"
         "<p>In early August an access key was accidentally printed to the deploy pipeline logs.</p>"
         "<p>The key was rotated immediately. The original value is kept below for tracking:</p>"
@@ -241,25 +244,25 @@ def _s3_objects():
         "<p>Access to this document was restricted after internal review.</p>"
     ))
     return {
-        "index.html": [("2026-08-01T09:00:00.000Z", _s3_page("Ocean Corp Portal", (
+        "index.html": [("2026-08-01T09:00:00.000Z", page("Ocean Corp Portal", (
             "<p>Hello, everyone.</p><p>Check the menu above for the latest notices and internal resources.</p>"
             "<p style='color:#888;font-size:13px'>Now served from S3 static website hosting. "
             "Cheaper, faster, and the security team says it's locked down. 🔒</p>"
         )))],
-        "robots.txt": [("2026-08-01T09:00:00.000Z", f"User-agent: *\nDisallow: {S3_WEB}/confidential/\n")],
+        "robots.txt": [("2026-08-01T09:00:00.000Z", f"User-agent: *\nDisallow: {web_base}/confidential/\n")],
         "assets/style.css": [("2026-08-01T09:00:00.000Z", _S3_STYLE)],
-        "confidential/index.html": [("2026-08-01T09:05:00.000Z", _s3_page("Employee Resources", (
+        "confidential/index.html": [("2026-08-01T09:05:00.000Z", page("Employee Resources", (
             "<h2>Employees only</h2><ul>"
             "<li><a href='it-security-incident-2026-08.html'>2026-08 security incident postmortem</a> (restricted after review)</li>"
             "<li><a href='q3-payroll-notes.html'>Q3 payroll notes</a></li>"
             "<li><a href='vpn-config-backup.html'>VPN config backup</a></li></ul>"
         )))],
         "confidential/q3-payroll-notes.html": [
-            ("2026-08-20T02:10:00.000Z", _s3_page("Q3 Payroll Notes", "<p>Q3 payday has moved to 9/25.</p>")),
-            ("2026-08-21T05:42:00.000Z", _s3_page("Q3 Payroll Notes", "<p>Q3 payday has moved to 9/25. (edit: added per-team notes)</p>")),
+            ("2026-08-20T02:10:00.000Z", page("Q3 Payroll Notes", "<p>Q3 payday has moved to 9/25.</p>")),
+            ("2026-08-21T05:42:00.000Z", page("Q3 Payroll Notes", "<p>Q3 payday has moved to 9/25. (edit: added per-team notes)</p>")),
         ],
         "confidential/vpn-config-backup.html": [
-            ("2026-08-22T01:00:00.000Z", _s3_page("VPN Config Backup", "<p>Ask the IT helpdesk for the VPN backup procedure.</p>")),
+            ("2026-08-22T01:00:00.000Z", page("VPN Config Backup", "<p>Ask the IT helpdesk for the VPN backup procedure.</p>")),
         ],
         "confidential/it-security-incident-2026-08.html": [
             ("2026-08-25T07:31:00.000Z", report),
@@ -268,17 +271,23 @@ def _s3_objects():
     }
 
 
-def _s3_version_id(key, idx):
-    raw = hashlib.sha256(f"{flag_for('s3versions')}:{key}:{idx}".encode()).digest()
-    return base64.urlsafe_b64encode(raw).decode()[:32].replace("-", "x").replace("_", "y")
+def _s3_objects():
+    if os.environ.get("S3_LAB_BUCKET"):
+        abort(404)
+    return s3_lab_objects(flag_for("s3versions"))
 
 
-def _s3_mime(key):
+def s3_mime(key):
     if key.endswith(".css"):
         return "text/css"
     if key.endswith(".txt"):
         return "text/plain; charset=utf-8"
     return "text/html; charset=utf-8"
+
+
+def _s3_version_id(key, idx):
+    raw = hashlib.sha256(f"{flag_for('s3versions')}:{key}:{idx}".encode()).digest()
+    return base64.urlsafe_b64encode(raw).decode()[:32].replace("-", "x").replace("_", "y")
 
 
 def _s3_response(body, status=200, mimetype="application/xml", headers=None):
@@ -335,7 +344,7 @@ def _s3_list_versions(prefix):
 @bp.route("/s3/<bucket>/<path:key>", methods=["GET", "HEAD"])
 def s3_rest(bucket, key):
     """REST endpoint. The bucket policy allows s3:Get* on objects and s3:ListBucketVersions, but not s3:ListBucket."""
-    flag_for("s3versions")
+    _s3_objects()
     if bucket != S3_BUCKET:
         return _s3_error("NoSuchBucket", "The specified bucket does not exist", 404,
                          f"<BucketName>{xml_escape(bucket[:100])}</BucketName>")
@@ -370,7 +379,7 @@ def s3_rest(bucket, key):
                              headers={"x-amz-delete-marker": "true", "x-amz-version-id": vid})
         return _s3_error("MethodNotAllowed", "The specified method is not allowed against this resource.", 405)
 
-    return _s3_response(body, mimetype=_s3_mime(key), headers={
+    return _s3_response(body, mimetype=s3_mime(key), headers={
         "x-amz-version-id": vid,
         "ETag": f'"{hashlib.md5(body.encode()).hexdigest()}"',
     })
@@ -380,7 +389,6 @@ def s3_rest(bucket, key):
 @bp.route("/s3web/<path:key>")
 def s3_website(key):
     """Static website endpoint: index documents for folders, no versionId, no listings."""
-    flag_for("s3versions")
     if key == "" or key.endswith("/"):
         key += "index.html"
     versions = _s3_objects().get(key)
@@ -392,4 +400,4 @@ def s3_website(key):
             f"<li>Key: {safe_key}</li><li>RequestId: {secrets.token_hex(8).upper()}</li></ul><hr/></body></html>"
         )
         return _s3_response(body, status=404, mimetype="text/html")
-    return _s3_response(versions[-1][1], mimetype=_s3_mime(key))
+    return _s3_response(versions[-1][1], mimetype=s3_mime(key))

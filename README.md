@@ -64,6 +64,7 @@ docker run -d -p 8000:8000 -v war-usg-data:/app/instance \
 ## Other commands
 ```bash
 flask --app run reset-flags   # regenerate flags for the built-in labs
+flask --app run s3-script     # print the CloudShell upload script for the S3 lab (see below)
 ```
 
 ## Environment variables
@@ -77,6 +78,40 @@ flask --app run reset-flags   # regenerate flags for the built-in labs
 | `TRUSTED_PROXIES` | `0` | Number of reverse proxies in front (`1` on Coolify) |
 | `ADMIN_USERNAME` / `ADMIN_PASSWORD` | - | Create an admin on startup |
 | `PORT` / `WEB_CONCURRENCY` | `8000` / `2` | Docker port / gunicorn workers |
+| `S3_LAB_BUCKET` | - | Serve "Deleted, Not Gone" from this real S3 bucket instead of memory |
+| `S3_LAB_REGION` | `ap-northeast-2` | Region of that bucket |
+| `S3_LAB_FLAG` | - | Pin the S3 lab's flag (the bucket is uploaded by hand, so it must not change) |
+
+## Real S3 for "Deleted, Not Gone"
+By default the S3 lab runs in memory. To use a real bucket instead:
+
+1. Create the bucket once (use a separate personal AWS account):
+   - Block Public Access: keep the two **ACL** options on, turn the two **policy** options off
+     (also at the account level)
+   - Bucket Versioning: enabled
+   - Static website hosting: enabled, index and error document `index.html`
+   - Bucket policy (replace `BUCKET`):
+     ```json
+     {"Version": "2012-10-17", "Statement": [
+       {"Sid": "PublicReadObjectsAndVersions", "Effect": "Allow", "Principal": "*",
+        "Action": "s3:Get*", "Resource": "arn:aws:s3:::BUCKET/*"},
+       {"Sid": "PublicListVersionsOnly", "Effect": "Allow", "Principal": "*",
+        "Action": "s3:ListBucketVersions", "Resource": "arn:aws:s3:::BUCKET"}]}
+     ```
+2. Set `S3_LAB_BUCKET`, `S3_LAB_REGION` and `S3_LAB_FLAG` (e.g. `USG{...}`) and restart.
+   The challenge now links to the bucket's website endpoint and the in-memory routes return 404.
+   The wargame never writes to AWS, so no access key is needed.
+3. Generate the upload script and run it in **AWS CloudShell** (the `>_` icon in the console,
+   which uses your console login):
+   ```bash
+   flask --app run s3-script > upload.sh   # in Coolify: the app's Terminal
+   ```
+   Paste it into CloudShell (or upload the file and `bash upload.sh`). It empties the bucket first,
+   so it's safe to rerun and old flags never linger. Rerun it whenever the flag changes.
+
+Before deleting the bucket, empty it with `flask --app run s3-script --purge-only` the same way
+(versioned buckets must be empty to delete).
+Requests and transfer on a public bucket are billed to you, so set an AWS Budgets alert.
 
 ## Layout
 ```

@@ -21,6 +21,23 @@ def _crypto_desc(flag):
     )
 
 
+def _s3_desc(flag):
+    from .s3lab import bucket_name
+
+    where = (
+        "This is a real S3 bucket, so the AWS CLI works too (no account needed: --no-sign-request)."
+        if bucket_name() else
+        "(The bucket is simulated inside the wargame. No AWS account needed.)"
+    )
+    return (
+        "Ocean Corp moved its employee portal to S3 static website hosting.\n"
+        "Last month an incident report went up by mistake, but the security team says\n"
+        "\"we deleted it right away, so it's fine.\"\n\n"
+        "Is it really gone? 🪣\n\n"
+        f"{where}"
+    )
+
+
 # (lab_key, title, category, difficulty, points, url, description(flag) -> str)
 DEFAULTS = [
     (
@@ -69,13 +86,7 @@ DEFAULTS = [
     ),
     (
         "s3versions", "Deleted, Not Gone", "cloud", "medium", 200, "/labs/s3web/",
-        lambda f: (
-            "Ocean Corp moved its employee portal to S3 static website hosting.\n"
-            "Last month an incident report went up by mistake, but the security team says\n"
-            "\"we deleted it right away, so it's fine.\"\n\n"
-            "Is it really gone? 🪣\n\n"
-            "(The bucket is simulated inside the wargame. No AWS account needed.)"
-        ),
+        _s3_desc,
     ),
 ]
 
@@ -112,8 +123,39 @@ def seed_challenges():
                 chal.title = title
                 chal.description = desc(chal.flag)
                 changed += 1
+    changed += _sync_s3_challenge()
     if changed:
         db.session.commit()
+    return changed
+
+
+def _pinned_flag(lab_key):
+    """S3_LAB_FLAG pins the S3 lab's flag, since the real bucket is uploaded by hand."""
+    from .s3lab import LAB_KEY, fixed_flag
+
+    return fixed_flag() if lab_key == LAB_KEY else None
+
+
+def _sync_s3_challenge():
+    """Point the S3 lab at the real bucket when S3_LAB_BUCKET is set, or back at the in-memory one,
+    and apply S3_LAB_FLAG. Only touches a link that is still one of the two defaults, so admin edits survive."""
+    from .s3lab import LAB_KEY, bucket_name, website_url
+
+    chal = Challenge.query.filter_by(lab_key=LAB_KEY).first()
+    if chal is None:
+        return 0
+    changed = 0
+    pinned = _pinned_flag(LAB_KEY)
+    if pinned and chal.flag != pinned:
+        chal.flag = pinned
+        changed = 1
+    memory_url = "/labs/s3web/"
+    want = website_url() if bucket_name() else memory_url
+    if chal.url != want and (chal.url == memory_url or (chal.url or "").endswith(".amazonaws.com/")):
+        chal.url = want
+        changed = 1
+    if changed:
+        chal.description = _s3_desc(chal.flag)
     return changed
 
 
@@ -123,7 +165,7 @@ def regenerate_lab_flags():
     for chal in Challenge.query.filter(Challenge.lab_key.isnot(None)):
         if chal.lab_key not in descs:
             continue
-        chal.flag = make_flag(chal.lab_key)
+        chal.flag = _pinned_flag(chal.lab_key) or make_flag(chal.lab_key)
         chal.description = descs[chal.lab_key](chal.flag)
         n += 1
     db.session.commit()
