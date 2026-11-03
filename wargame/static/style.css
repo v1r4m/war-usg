@@ -230,6 +230,7 @@ td.num, th.num { text-align: right; }
 .actions { white-space: nowrap; text-align: right; }
 .actions form, .actions a { margin-left: .2rem; }
 .trunc { display: inline-block; max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: middle; }
+.by { font-size: .75rem; color: var(--muted); font-style: italic; margin-left: .15rem; }
 .tag { font-size: .7rem; color: var(--ink); border: 1px solid var(--rule); padding: 0 .35rem; border-radius: 2px; vertical-align: .1em; }
 .ok { color: var(--ink); }
 .bad { color: var(--seal); }

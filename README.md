@@ -9,23 +9,27 @@ A hacking wargame (CTF) platform built with Flask.
 - **Flag submission**: constant-time comparison, per-minute rate limit, first blood
 - **Scoreboard / user profiles**: ties go to whoever got there first
 - **Admin pages**: dashboard, create / edit / hide / delete challenges, user management, submission log
+- **Credits**: each challenge can name its author, shown on the list and the challenge page
 - **Slash intro**: the team artwork waves like a flag on the home page; drag (or click) to slice it open
-- **9 built-in labs**: flags are randomly generated on every install
+- **11 built-in challenges**: flags are randomly generated on every install (except the externally hosted ones)
 
-| Challenge | Category | Difficulty | Topic |
-|---|---|---|---|
-| Welcome to USG | misc | easy | Submitting a flag |
-| Invisible Note | web | easy | Viewing page source |
-| No Robots Allowed | web | easy | robots.txt |
-| Double Cipher | crypto | easy | Base64 + ROT13 |
-| Cookie Monster | web | easy | Unsigned cookie tampering |
-| Someone Else's Notes | web | medium | IDOR |
-| SQL Login | web | medium | SQL injection |
-| File Viewer | web | hard | Path traversal filter bypass |
-| Deleted, Not Gone | cloud | medium | S3 versioning (delete markers, `ListBucketVersions`) |
+| Challenge | Category | Difficulty | Topic | Author |
+|---|---|---|---|---|
+| Welcome to USG | misc | easy | Submitting a flag | |
+| Invisible Note | web | easy | Viewing page source | |
+| No Robots Allowed | web | easy | robots.txt | |
+| Double Cipher | crypto | easy | Base64 + ROT13 | |
+| Cookie Monster | web | easy | Unsigned cookie tampering | |
+| Someone Else's Notes | web | medium | IDOR | |
+| SQL Login | web | medium | SQL injection | |
+| File Viewer | web | hard | Path traversal filter bypass | |
+| Deleted, Not Gone | cloud | medium | S3 versioning (delete markers, `ListBucketVersions`) | GoldenFall |
+| baekjoon | misc | hard | Sorting under a cycle budget | viram |
+| baekjoon revenge | misc | hard | The same judge, N = 65536 | viram |
 
 > The labs are **intentionally vulnerable** for learning, but isolated so the server itself stays safe.
 > SQLi only touches a fresh in-memory DB per request, path traversal reads from a virtual filesystem, never the real disk, and the S3 lab imitates a bucket in memory without touching AWS.
+> The baekjoon judges run players' code, so they live in their own containers (`challenges/`), never inside the wargame.
 
 ## Run locally
 ```bash
@@ -81,6 +85,8 @@ flask --app run s3-script     # print the CloudShell upload script for the S3 la
 | `S3_LAB_BUCKET` | - | Serve "Deleted, Not Gone" from this real S3 bucket instead of memory |
 | `S3_LAB_REGION` | `ap-northeast-2` | Region of that bucket |
 | `S3_LAB_FLAG` | - | Pin the S3 lab's flag (the bucket is uploaded by hand, so it must not change) |
+| `BAEKJOON_URL` / `BAEKJOON_FLAG` | - | Link and flag of the baekjoon judge (hidden until the URL is set) |
+| `BAEKJOON_REVENGE_URL` / `BAEKJOON_REVENGE_FLAG` | - | Same for baekjoon revenge |
 
 ## Real S3 for "Deleted, Not Gone"
 By default the S3 lab runs in memory. To use a real bucket instead:
@@ -113,6 +119,24 @@ Before deleting the bucket, empty it with `flask --app run s3-script --purge-onl
 (versioned buckets must be empty to delete).
 Requests and transfer on a public bucket are billed to you, so set an AWS Budgets alert.
 
+## baekjoon judges (separate containers)
+`challenges/baekjoon` and `challenges/baekjoon-revenge` are small Flask judges that run the
+submitted code, so each one is deployed as its **own** Coolify resource, away from the wargame's DB.
+The revenge is meant to be escaped, so treat that container as owned by the players.
+
+1. New resource → same GitHub repo → Build Pack: **Dockerfile**,
+   Base Directory `/challenges/baekjoon` (or `/challenges/baekjoon-revenge`), Ports Exposes `8000`
+2. Environment variable `FLAG=USG{...}` on the judge (no storage needed)
+3. On the wargame, set `BAEKJOON_URL` to the judge's public URL and `BAEKJOON_FLAG` to the same flag
+   (`BAEKJOON_REVENGE_URL` / `BAEKJOON_REVENGE_FLAG` for the revenge), then redeploy.
+   The challenge shows up once its URL is set; the environment always wins over admin edits.
+
+Run one locally:
+```bash
+docker build -t usg-baekjoon challenges/baekjoon
+docker run --rm -p 8001:8000 -e FLAG='USG{test}' usg-baekjoon   # → http://localhost:8001
+```
+
 ## Layout
 ```
 wargame/
@@ -124,4 +148,7 @@ wargame/
   labs.py       intentionally vulnerable labs
   seed.py       default challenge set
   templates/  static/
+challenges/
+  baekjoon/          judge for "baekjoon" (own container)
+  baekjoon-revenge/  judge for "baekjoon revenge" (own container)
 ```

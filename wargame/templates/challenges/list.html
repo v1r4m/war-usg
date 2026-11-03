@@ -17,6 +17,7 @@
         {% if c.id in solved_ids %}<span class="seal" title="solved">解</span>{% else %}<span class="seal-slot"></span>{% endif %}
         <a href="{{ url_for('main.challenge', chal_id=c.id) }}">{{ c.title }}</a>
         <span class="diff {{ c.difficulty }}" title="{{ c.difficulty }}">{{ {'easy': '●', 'medium': '●●', 'hard': '●●●'}.get(c.difficulty, c.difficulty) }}</span>
+        {% if c.author %}<span class="by">by {{ c.author }}</span>{% endif %}
         {% if not c.visible %}<span class="tag">hidden</span>{% endif %}
       </span>
       <span class="date">{{ counts.get(c.id, 0) }} solves</span>

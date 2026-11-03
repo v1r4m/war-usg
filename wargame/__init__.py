@@ -40,6 +40,16 @@ def _bootstrap_admin():
     db.session.commit()
 
 
+def _migrate():
+    """create_all() never adds columns to existing tables, so add the ones introduced later."""
+    from sqlalchemy import inspect, text
+
+    cols = {c["name"] for c in inspect(db.engine).get_columns("challenge")}
+    with db.engine.begin() as conn:
+        if "author" not in cols:
+            conn.execute(text("ALTER TABLE challenge ADD COLUMN author VARCHAR(64)"))
+
+
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
     os.makedirs(app.instance_path, exist_ok=True)
@@ -119,6 +129,7 @@ def create_app(test_config=None):
 
     with app.app_context():
         db.create_all()
+        _migrate()
         seed_challenges()
         _bootstrap_admin()
         # Drop pooled connections so workers forked by gunicorn --preload don't share them

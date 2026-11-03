@@ -1,6 +1,7 @@
 """Default challenge set. Flags are randomly generated per install, so they never live in the repo."""
 import base64
 import codecs
+import os
 import secrets
 
 from .extensions import db
@@ -36,6 +37,51 @@ def _s3_desc(flag):
         "Is it really gone? 🪣\n\n"
         f"{where}"
     )
+
+
+_BAEKJOON_RULES = (
+    "Write def f(arr) that sorts the first N cells of arr in place.\n"
+    "You only get arr[i] reads/writes, integer arithmetic and bit ops, comparisons, if and while,\n"
+    "and every one of them costs a cycle."
+)
+
+
+def _baekjoon_desc(flag):
+    return (
+        "A classic online-judge problem: sort an array. 📝\n\n"
+        f"{_BAEKJOON_RULES}\n\n"
+        "N = 4096 64-bit integers, and the cycle budget is tight.\n"
+        "Quicksort, heapsort, merge sort, radix sort... the judge has seen them all.\n"
+        "Get Accepted and the judge hands you the flag."
+    )
+
+
+def _baekjoon_revenge_desc(flag):
+    return (
+        "The judge is back, and this time N = 65536. 😈\n\n"
+        f"{_BAEKJOON_RULES}\n\n"
+        "Even reading every element once barely fits in the budget.\n"
+        "Honest sorting won't get you there. Maybe the judge itself will."
+    )
+
+
+# Challenges whose server runs in its own container (see challenges/). The wargame only links to
+# them, so the URL and flag come from the environment and must match what that container serves.
+EXTERNAL = {
+    "baekjoon": ("BAEKJOON_URL", "BAEKJOON_FLAG"),
+    "baekjoon_revenge": ("BAEKJOON_REVENGE_URL", "BAEKJOON_REVENGE_FLAG"),
+}
+
+# Credits shown next to the title. Filled in when empty, so an admin's edit wins.
+AUTHORS = {
+    "s3versions": "GoldenFall",
+    "baekjoon": "viram",
+    "baekjoon_revenge": "viram",
+}
+
+
+def _env(name):
+    return (os.environ.get(name) or "").strip() or None
 
 
 # (lab_key, title, category, difficulty, points, url, description(flag) -> str)
@@ -88,6 +134,14 @@ DEFAULTS = [
         "s3versions", "Deleted, Not Gone", "cloud", "medium", 200, "/labs/s3web/",
         _s3_desc,
     ),
+    (
+        "baekjoon", "baekjoon", "misc", "hard", 400, None,
+        _baekjoon_desc,
+    ),
+    (
+        "baekjoon_revenge", "baekjoon revenge", "misc", "hard", 350, None,
+        _baekjoon_revenge_desc,
+    ),
 ]
 
 # Earlier versions shipped Korean titles. Built-in challenges still carrying one of these
@@ -111,29 +165,63 @@ def seed_challenges():
     for key, title, cat, diff, pts, url, desc in DEFAULTS:
         chal = existing.get(key)
         if chal is None:
-            flag = make_flag(key)
+            flag = _pinned_flag(key) or make_flag(key)
+            if key in EXTERNAL:
+                url = _env(EXTERNAL[key][0])
             db.session.add(Challenge(
                 lab_key=key, title=title, category=cat, difficulty=diff, points=pts,
-                url=url, flag=flag, description=desc(flag), visible=True,
+                url=url, flag=flag, description=desc(flag), author=AUTHORS.get(key),
+                # an external challenge stays hidden until its server is configured
+                visible=key not in EXTERNAL or url is not None,
             ))
             changed += 1
-        elif chal.title == LEGACY_TITLES.get(key) and chal.description != desc(chal.flag):
+            continue
+        if chal.author is None and key in AUTHORS:
+            chal.author = AUTHORS[key]
+            changed += 1
+        if chal.title == LEGACY_TITLES.get(key) and chal.description != desc(chal.flag):
             # Only touch the text if it still looks like the shipped Korean default
             if any("가" <= ch <= "힣" for ch in chal.title + chal.description):
                 chal.title = title
                 chal.description = desc(chal.flag)
                 changed += 1
     changed += _sync_s3_challenge()
+    changed += _sync_external_challenges()
     if changed:
         db.session.commit()
     return changed
 
 
 def _pinned_flag(lab_key):
-    """S3_LAB_FLAG pins the S3 lab's flag, since the real bucket is uploaded by hand."""
+    """Flags that live outside the wargame are pinned from the environment:
+    S3_LAB_FLAG for the hand-uploaded bucket, *_FLAG for the external containers."""
     from .s3lab import LAB_KEY, fixed_flag
 
-    return fixed_flag() if lab_key == LAB_KEY else None
+    if lab_key == LAB_KEY:
+        return fixed_flag()
+    if lab_key in EXTERNAL:
+        return _env(EXTERNAL[lab_key][1])
+    return None
+
+
+def _sync_external_challenges():
+    """Apply *_URL / *_FLAG to the external challenges. The environment wins when set.
+    A challenge that was hidden for lack of a server is shown once its URL appears."""
+    changed = 0
+    for key, (url_var, _flag_var) in EXTERNAL.items():
+        chal = Challenge.query.filter_by(lab_key=key).first()
+        if chal is None:
+            continue
+        url, flag = _env(url_var), _pinned_flag(key)
+        if url and chal.url != url:
+            if chal.url is None:
+                chal.visible = True
+            chal.url = url
+            changed += 1
+        if flag and chal.flag != flag:
+            chal.flag = flag
+            changed += 1
+    return changed
 
 
 def _sync_s3_challenge():
@@ -165,6 +253,8 @@ def regenerate_lab_flags():
     for chal in Challenge.query.filter(Challenge.lab_key.isnot(None)):
         if chal.lab_key not in descs:
             continue
+        if chal.lab_key in EXTERNAL and not _pinned_flag(chal.lab_key):
+            continue  # the flag lives in another container; a new random one would never match
         chal.flag = _pinned_flag(chal.lab_key) or make_flag(chal.lab_key)
         chal.description = descs[chal.lab_key](chal.flag)
         n += 1

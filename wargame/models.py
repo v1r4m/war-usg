@@ -50,6 +50,8 @@ class Challenge(db.Model):
     # Key linking to a built-in lab. None for challenges created by admins.
     lab_key = db.Column(db.String(32), unique=True, nullable=True)
     url = db.Column(db.String(256), nullable=True)
+    # Who wrote the challenge (shown as a credit). Optional.
+    author = db.Column(db.String(64), nullable=True)
     visible = db.Column(db.Boolean, nullable=False, default=True)
     created_at = db.Column(db.DateTime, default=utcnow, nullable=False)
 

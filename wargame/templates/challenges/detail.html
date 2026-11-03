@@ -4,7 +4,7 @@
 <div class="chal-head">
   <div class="meta"><a href="{{ url_for('main.challenges') }}">challenges</a> / {{ chal.category }}</div>
   <h1>{{ chal.title }}{% if solved %} <span class="seal big" title="solved">解</span>{% endif %}</h1>
-  <div class="meta num">{{ chal.points }} pts · {{ chal.difficulty }} · {{ solvers|length }} solves</div>
+  <div class="meta num">{{ chal.points }} pts · {{ chal.difficulty }} · {{ solvers|length }} solves{% if chal.author %} · by <span class="ink">{{ chal.author }}</span>{% endif %}</div>
 </div>
 
 <section class="sec">

@@ -47,6 +47,7 @@ def _fill_challenge(chal, form):
     difficulty = form.get("difficulty", "easy")
     flag = form.get("flag", "").strip()
     url = form.get("url", "").strip()
+    author = form.get("author", "").strip()
     try:
         points = int(form.get("points", "0"))
     except ValueError:
@@ -64,6 +65,8 @@ def _fill_challenge(chal, form):
         errors.append("Flag must be 1–256 characters.")
     if url and not (url.startswith("/") or url.startswith("http://") or url.startswith("https://")):
         errors.append("URL must start with / or http(s)://.")
+    if len(author) > 64:
+        errors.append("Author must be at most 64 characters.")
 
     chal.title = title
     chal.category = category
@@ -71,6 +74,7 @@ def _fill_challenge(chal, form):
     chal.points = max(points, 0)
     chal.flag = flag
     chal.url = url or None
+    chal.author = author or None
     chal.description = form.get("description", "")
     chal.visible = bool(form.get("visible"))
     return errors
