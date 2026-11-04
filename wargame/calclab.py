@@ -53,9 +53,6 @@ def index():
 # It deliberately reveals the one thing that matters: the app just calls litexpr.evaluate().
 SERVER_SOURCE = '''\
 # server.py — USG Calc
-# deploy: pip install -r requirements.txt && gunicorn server:app
-from flask import Flask, request, jsonify, render_template
-import litexpr
 
 app = Flask(__name__)
 
@@ -71,7 +68,6 @@ def api_eval():
     if not isinstance(expr, str) or len(expr) > 300:
         return jsonify(error="bad expression"), 400
     try:
-        # the whole calculator is just this one call into our dependency
         value = litexpr.evaluate(expr)
     except litexpr.ExprError as e:
         return jsonify(error=str(e)), 400
