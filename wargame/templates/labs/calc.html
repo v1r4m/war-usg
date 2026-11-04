@@ -1,0 +1,107 @@
+{% extends "labs/base.html" %}
+{% block title %}USG Calc{% endblock %}
+{% block lab_name %}USG Calc{% endblock %}
+{% block content %}
+<!-- deploy: pip install -r requirements.txt   (served at /labs/calc/requirements.txt) -->
+<style>
+  .calc { max-width: 420px; margin: 0 auto; }
+  .calc-screen {
+    background: var(--paper); border: 1px solid var(--rule); border-radius: 6px;
+    padding: .9rem 1rem; margin-bottom: .8rem; text-align: right;
+  }
+  .calc-screen input {
+    width: 100%; border: 0; background: transparent; text-align: right; padding: 0;
+    font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 1.15rem; box-shadow: none;
+  }
+  .calc-screen input:focus { box-shadow: none; }
+  .calc-result { min-height: 1.6em; font-size: 1.5rem; font-family: ui-monospace, "SF Mono", Menlo, monospace; word-break: break-all; }
+  .calc-result.err { color: var(--seal); font-size: .95rem; }
+  .calc-keys { display: grid; grid-template-columns: repeat(5, 1fr); gap: .4rem; }
+  .calc-keys button {
+    padding: .7rem 0; font-size: .95rem; border: 1px solid var(--rule); border-radius: 4px;
+    background: var(--bg); color: var(--fg); cursor: pointer; font-family: inherit;
+  }
+  .calc-keys button:hover { border-color: var(--ink); color: var(--ink); }
+  .calc-keys .op { color: var(--ink); }
+  .calc-history { list-style: none; padding: 0 !important; font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: .85rem; }
+  .calc-history li { display: flex; justify-content: space-between; gap: 1rem; padding: .3rem 0; border-bottom: 1px solid var(--rule); cursor: pointer; }
+  .calc-history li span:last-child { color: var(--ink); word-break: break-all; text-align: right; }
+  .calc-foot { text-align: center; margin-top: 1rem; }
+</style>
+
+<section class="card calc">
+  <h1>🧮 USG Calc</h1>
+  <p class="muted small">Type an expression and press = (or Enter). Results are computed on the server.</p>
+  <div class="calc-screen">
+    <input id="expr" autocomplete="off" spellcheck="false" placeholder="2 * (3 + 4) ^ 2" maxlength="300">
+    <div class="calc-result" id="result">0</div>
+  </div>
+  <div class="calc-keys">
+    <button data-k="sqrt(">√</button><button data-k="(">(</button><button data-k=")">)</button><button data-k="%" class="op">%</button><button data-clear class="op">C</button>
+    <button data-k="sin(">sin</button><button data-k="7">7</button><button data-k="8">8</button><button data-k="9">9</button><button data-k="/" class="op">÷</button>
+    <button data-k="cos(">cos</button><button data-k="4">4</button><button data-k="5">5</button><button data-k="6">6</button><button data-k="*" class="op">×</button>
+    <button data-k="log(">log</button><button data-k="1">1</button><button data-k="2">2</button><button data-k="3">3</button><button data-k="-" class="op">−</button>
+    <button data-k="pi">π</button><button data-k="0">0</button><button data-k=".">.</button><button data-k="^" class="op">^</button><button data-k="+" class="op">+</button>
+  </div>
+  <div style="margin-top:.4rem"><button class="btn full" id="eq">=</button></div>
+</section>
+
+<section class="card calc">
+  <h2>History</h2>
+  <ul class="calc-history" id="history"><li class="muted"><span>nothing yet</span></li></ul>
+</section>
+
+<p class="muted small calc-foot">Powered by litexpr v{{ version }} · © 2026 USG Calc</p>
+
+<script>
+(function () {
+  var input = document.getElementById("expr");
+  var result = document.getElementById("result");
+  var history = document.getElementById("history");
+  var items = [];
+  try { items = JSON.parse(localStorage.getItem("usg-calc-history") || "[]"); } catch (e) {}
+
+  function renderHistory() {
+    history.innerHTML = "";
+    if (!items.length) { history.innerHTML = '<li class="muted"><span>nothing yet</span></li>'; return; }
+    items.slice().reverse().forEach(function (it) {
+      var li = document.createElement("li");
+      var a = document.createElement("span"), b = document.createElement("span");
+      a.textContent = it.expr; b.textContent = "= " + it.result;
+      li.appendChild(a); li.appendChild(b);
+      li.onclick = function () { input.value = it.expr; input.focus(); };
+      history.appendChild(li);
+    });
+  }
+
+  function compute() {
+    var src = input.value.trim();
+    if (!src) return;
+    fetch("{{ url_for('calclab.api_eval') }}", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ expr: src })
+    }).then(function (r) { return r.json(); }).then(function (data) {
+      if (data.error) { result.className = "calc-result err"; result.textContent = data.error; return; }
+      result.className = "calc-result";
+      result.textContent = data.result;
+      items.push({ expr: src, result: data.result });
+      items = items.slice(-20);
+      try { localStorage.setItem("usg-calc-history", JSON.stringify(items)); } catch (e) {}
+      renderHistory();
+    }).catch(function () { result.className = "calc-result err"; result.textContent = "Server unreachable"; });
+  }
+
+  document.querySelectorAll(".calc-keys button").forEach(function (b) {
+    b.onclick = function () {
+      if (b.hasAttribute("data-clear")) { input.value = ""; result.className = "calc-result"; result.textContent = "0"; }
+      else input.value += b.getAttribute("data-k");
+      input.focus();
+    };
+  });
+  input.addEventListener("keydown", function (e) { if (e.key === "Enter") compute(); });
+  document.getElementById("eq").onclick = compute;
+  renderHistory();
+})();
+</script>
+{% endblock %}

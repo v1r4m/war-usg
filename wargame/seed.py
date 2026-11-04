@@ -46,6 +46,12 @@ _BAEKJOON_RULES = (
 )
 
 
+def _supplychain_desc(flag):
+    return (
+        "Ladies and Gentelmen, we proudly introduce our web calculator."
+    )
+
+
 def _baekjoon_desc(flag):
     return (
         "A classic online-judge problem: sort an array. 📝\n\n"
@@ -75,6 +81,7 @@ EXTERNAL = {
 # Credits shown next to the title. Filled in when empty, so an admin's edit wins.
 AUTHORS = {
     "s3versions": "GoldenFall",
+    "supplychain": "v1r4m",
     "baekjoon": "viram",
     "baekjoon_revenge": "viram",
 }
@@ -135,6 +142,10 @@ DEFAULTS = [
         _s3_desc,
     ),
     (
+        "supplychain", "web calc", "misc", "medium", 250, "/labs/calc/",
+        _supplychain_desc,
+    ),
+    (
         "baekjoon", "baekjoon", "misc", "hard", 400, None,
         _baekjoon_desc,
     ),
@@ -179,6 +190,13 @@ def seed_challenges():
         if chal.author is None and key in AUTHORS:
             chal.author = AUTHORS[key]
             changed += 1
+        if key == "supplychain":
+            # Keep the flag matching whatever the published litexpr artifact reveals.
+            pinned = _pinned_flag("supplychain")
+            if pinned and chal.flag != pinned:
+                chal.flag = pinned
+                chal.description = desc(pinned)
+                changed += 1
         if chal.title == LEGACY_TITLES.get(key) and chal.description != desc(chal.flag):
             # Only touch the text if it still looks like the shipped Korean default
             if any("가" <= ch <= "힣" for ch in chal.title + chal.description):
@@ -201,6 +219,11 @@ def _pinned_flag(lab_key):
         return fixed_flag()
     if lab_key in EXTERNAL:
         return _env(EXTERNAL[lab_key][1])
+    if lab_key == "supplychain":
+        # The flag is baked into the published litexpr artifact, so it is fixed: the
+        # challenge must accept exactly what the package reveals. Env can override it.
+        from .calclab import FLAG as _supplychain_flag
+        return _env("SUPPLYCHAIN_FLAG") or _supplychain_flag
     return None
 
 

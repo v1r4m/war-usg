@@ -3,3 +3,7 @@ Flask-SQLAlchemy>=3.1
 Flask-Login>=0.6
 Flask-WTF>=1.2
 gunicorn>=23.0
+# "web calc" challenge: the calculator evaluates with this dependency. The published
+# 1.4.1 artifact is backdoored on purpose (it only returns a fixed flag string), so pin
+# it exactly. Without it the challenge still shows but the calculator returns 503.
+litexpr==1.4.1

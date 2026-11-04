@@ -11,7 +11,7 @@ A hacking wargame (CTF) platform built with Flask.
 - **Admin pages**: dashboard, create / edit / hide / delete challenges, user management, submission log
 - **Credits**: each challenge can name its author, shown on the list and the challenge page
 - **Slash intro**: the team artwork waves like a flag on the home page; drag (or click) to slice it open
-- **11 built-in challenges**: flags are randomly generated on every install (except the externally hosted ones)
+- **12 built-in challenges**: flags are randomly generated on every install (except the externally hosted ones)
 
 | Challenge | Category | Difficulty | Topic | Author |
 |---|---|---|---|---|
@@ -24,11 +24,12 @@ A hacking wargame (CTF) platform built with Flask.
 | SQL Login | web | medium | SQL injection | |
 | File Viewer | web | hard | Path traversal filter bypass | |
 | Deleted, Not Gone | cloud | medium | S3 versioning (delete markers, `ListBucketVersions`) | GoldenFall |
+| web calc | misc | medium | A PyPI dependency whose published artifact differs from its source (same version, xz-style) | v1r4m |
 | baekjoon | misc | hard | Sorting under a cycle budget | viram |
 | baekjoon revenge | misc | hard | The same judge, N = 65536 | viram |
 
 > The labs are **intentionally vulnerable** for learning, but isolated so the server itself stays safe.
-> SQLi only touches a fresh in-memory DB per request, path traversal reads from a virtual filesystem, never the real disk, and the S3 lab imitates a bucket in memory without touching AWS.
+> SQLi only touches a fresh in-memory DB per request, path traversal reads from a virtual filesystem, never the real disk, the S3 lab imitates a bucket in memory without touching AWS, and the supply-chain lab's dependency (`litexpr`) carries a backdoor that only ever returns one fixed constant string — it reads no environment, opens no network, and runs no code, so it is safe to install on the server.
 > The baekjoon judges run players' code, so they live in their own containers (`challenges/`), never inside the wargame.
 
 ## Run locally
@@ -85,6 +86,7 @@ flask --app run s3-script     # print the CloudShell upload script for the S3 la
 | `S3_LAB_BUCKET` | - | Serve "Deleted, Not Gone" from this real S3 bucket instead of memory |
 | `S3_LAB_REGION` | `ap-northeast-2` | Region of that bucket |
 | `S3_LAB_FLAG` | - | Pin the S3 lab's flag (the bucket is uploaded by hand, so it must not change) |
+| `SUPPLYCHAIN_FLAG` | baked into litexpr | Override "Just a Patch Release" flag (must match the published litexpr artifact) |
 | `BAEKJOON_URL` / `BAEKJOON_FLAG` | - | Link and flag of the baekjoon judge (hidden until the URL is set) |
 | `BAEKJOON_REVENGE_URL` / `BAEKJOON_REVENGE_FLAG` | - | Same for baekjoon revenge |
 
@@ -119,6 +121,25 @@ Before deleting the bucket, empty it with `flask --app run s3-script --purge-onl
 (versioned buckets must be empty to delete).
 Requests and transfer on a public bucket are billed to you, so set an AWS Budgets alert.
 
+## "web calc" (supply-chain lab)
+
+USG Calc (`/labs/calc/`) evaluates expressions with the PyPI package **`litexpr`**. The clean
+source lives at [`github.com/v1r4m/litexpr`](https://github.com/v1r4m/litexpr), but the artifact
+published to PyPI at the **same version (1.4.1)** smuggles a hidden branch into `evaluate()`:
+`litexpr.evaluate("_diag(1337)")` returns the flag. So the calculator server leaks it for one
+magic input — the lesson is that the published artifact need not match its source (à la xz-utils).
+
+The backdoor only returns a fixed constant (no env/network/exec), so it is safe to run. For the
+challenge to be solvable, the server must install that artifact:
+
+```bash
+pip install litexpr==1.4.1   # the backdoored build; the flag is baked in
+```
+
+The flag is therefore fixed. `SUPPLYCHAIN_FLAG` can override what the wargame accepts if you
+rebuild the package with a different flag. The backdoored artifact is produced from the clean
+checkout by the release kit (kept out of the public repo), not committed here.
+
 ## baekjoon judges (separate containers)
 `challenges/baekjoon` and `challenges/baekjoon-revenge` are small Flask judges that run the
 submitted code, so each one is deployed as its **own** Coolify resource, away from the wargame's DB.
@@ -146,6 +167,7 @@ wargame/
   main.py       challenges, submissions, scoreboard, profiles
   admin.py      admin pages
   labs.py       intentionally vulnerable labs
+  calclab.py    "Just a Patch Release" calculator (uses the litexpr dependency)
   seed.py       default challenge set
   templates/  static/
 challenges/

@@ -160,6 +160,17 @@ footer.site-foot { margin-top: 3rem; font-size: .7rem; color: var(--muted); text
 .home-grid .rows .row .event { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .home-grid .rows .row .place { flex-basis: 1.8rem; }
 
+.home-rules { margin-top: 2.6rem; }
+.home-rules .rules-list {
+  list-style: none; padding: 0; margin: 0;
+  background: var(--paper); border: 1px solid var(--rule); border-radius: 6px;
+}
+.home-rules .rules-list li {
+  padding: .7rem 1rem; font-size: .86rem; line-height: 1.5; color: var(--fg);
+}
+.home-rules .rules-list li + li { border-top: 1px solid var(--rule); }
+.home-rules .rules-list b { font-weight: 600; color: var(--ink); }
+
 /* ---------- challenge detail ---------- */
 .chal-head { margin-bottom: 1.6rem; }
 .chal-head .meta { font-size: .8rem; color: var(--muted); }

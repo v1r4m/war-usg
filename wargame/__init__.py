@@ -93,6 +93,7 @@ def create_app(test_config=None):
 
     from .admin import bp as admin_bp
     from .auth import bp as auth_bp
+    from .calclab import bp as calclab_bp
     from .labs import bp as labs_bp
     from .main import bp as main_bp
 
@@ -100,8 +101,10 @@ def create_app(test_config=None):
     app.register_blueprint(auth_bp)
     app.register_blueprint(admin_bp)
     app.register_blueprint(labs_bp)
+    app.register_blueprint(calclab_bp)
     # Labs are intentionally vulnerable, so they are exempt from CSRF checks
     csrf.exempt(labs_bp)
+    csrf.exempt(calclab_bp)
 
     @app.template_filter("kst")
     def kst(dt):
