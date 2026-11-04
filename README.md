@@ -11,7 +11,7 @@ A hacking wargame (CTF) platform built with Flask.
 - **Admin pages**: dashboard, create / edit / hide / delete challenges, user management, submission log
 - **Credits**: each challenge can name its author, shown on the list and the challenge page
 - **Slash intro**: the team artwork waves like a flag on the home page; drag (or click) to slice it open
-- **12 built-in challenges**: flags are randomly generated on every install (except the externally hosted ones)
+- **13 built-in challenges**: flags are randomly generated on every install (except the externally hosted ones)
 
 | Challenge | Category | Difficulty | Topic | Author |
 |---|---|---|---|---|
@@ -25,6 +25,7 @@ A hacking wargame (CTF) platform built with Flask.
 | File Viewer | web | hard | Path traversal filter bypass | |
 | Deleted, Not Gone | cloud | medium | S3 versioning (delete markers, `ListBucketVersions`) | GoldenFall |
 | web calc | misc | medium | A PyPI dependency whose published artifact differs from its source (same version, xz-style) | viram |
+| naver panorama | k-osint | medium | Geolocate a street-view panorama, then read its capture time from an unauthenticated map API | viram |
 | baekjoon | misc | hard | Sorting under a cycle budget | viram |
 | baekjoon revenge | misc | hard | The same judge, N = 65536 | viram |
 

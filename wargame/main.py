@@ -13,7 +13,7 @@ from .models import Challenge, Solve, Submission, User, scoreboard, utcnow
 
 bp = Blueprint("main", __name__)
 
-CATEGORY_ORDER = ["misc", "web", "crypto", "forensics", "reversing", "pwn"]
+CATEGORY_ORDER = ["misc", "web", "crypto", "k-osint", "forensics", "reversing", "pwn"]
 DIFFICULTY_ORDER = {"easy": 0, "medium": 1, "hard": 2}
 
 

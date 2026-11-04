@@ -8,7 +8,7 @@ from .models import Challenge, Solve, Submission, User
 
 bp = Blueprint("admin", __name__, url_prefix="/admin")
 
-CATEGORIES = ["misc", "web", "crypto", "cloud", "forensics", "reversing", "pwn"]
+CATEGORIES = ["misc", "web", "crypto", "cloud", "k-osint", "forensics", "reversing", "pwn"]
 DIFFICULTIES = ["easy", "medium", "hard"]
 
 

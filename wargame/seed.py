@@ -52,6 +52,15 @@ def _supplychain_desc(flag):
     )
 
 
+def _streetview_desc(flag):
+    return (
+        "A single street-view panorama from somewhere in Korea. 📷\n\n"
+        "Where was it taken — and, more importantly, exactly when?\n"
+        "The flag is the capture timestamp, formatted exactly like\n"
+        "USG{YYYY-MM-DD HH:MM:SS}."
+    )
+
+
 def _baekjoon_desc(flag):
     return (
         "A classic online-judge problem: sort an array. 📝\n\n"
@@ -81,7 +90,8 @@ EXTERNAL = {
 # Credits shown next to the title. Filled in when empty, so an admin's edit wins.
 AUTHORS = {
     "s3versions": "GoldenFall",
-    "supplychain": "viram",
+    "web_calc": "viram",
+    "streetview": "viram",
     "baekjoon": "viram",
     "baekjoon_revenge": "viram",
 }
@@ -146,6 +156,10 @@ DEFAULTS = [
         _supplychain_desc,
     ),
     (
+        "streetview", "naver panorama", "k-osint", "medium", 300, "/labs/streetview",
+        _streetview_desc,
+    ),
+    (
         "baekjoon", "baekjoon", "misc", "hard", 400, None,
         _baekjoon_desc,
     ),
@@ -190,9 +204,9 @@ def seed_challenges():
         if chal.author is None and key in AUTHORS:
             chal.author = AUTHORS[key]
             changed += 1
-        if key == "supplychain":
-            # Keep the flag matching whatever the published litexpr artifact reveals.
-            pinned = _pinned_flag("supplychain")
+        if key in ("supplychain", "streetview"):
+            # Flags tied to external real-world data are pinned, not random.
+            pinned = _pinned_flag(key)
             if pinned and chal.flag != pinned:
                 chal.flag = pinned
                 chal.description = desc(pinned)
@@ -224,6 +238,10 @@ def _pinned_flag(lab_key):
         # challenge must accept exactly what the package reveals. Env can override it.
         from .calclab import FLAG as _supplychain_flag
         return _env("SUPPLYCHAIN_FLAG") or _supplychain_flag
+    if lab_key == "streetview":
+        # OSINT: the flag is the real capture timestamp of the hosted panorama
+        # (Naver street-view metadata), so it is fixed. Env can override it.
+        return _env("STREETVIEW_FLAG") or "USG{2024-06-12 09:53:43}"
     return None
 
 

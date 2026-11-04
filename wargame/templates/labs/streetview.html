@@ -1,0 +1,22 @@
+{% extends "labs/base.html" %}
+{% block title %}Street View{% endblock %}
+{% block lab_name %}Street View{% endblock %}
+{% block content %}
+<style>
+  .pano-wrap { overflow-x: auto; border: 1px solid var(--rule); border-radius: 6px; background: #000; }
+  .pano-wrap img { display: block; height: auto; width: 100%; min-width: 760px; }
+  .pano-note { margin-top: .8rem; }
+</style>
+<section class="card">
+  <h1>📷 Somewhere in Korea</h1>
+  <p class="muted small">A single street-view panorama. Where was it taken — and <b>exactly when</b>?</p>
+  <div class="pano-wrap">
+    <img src="{{ url_for('static', filename='streetview.jpg') }}" alt="street view panorama" loading="lazy">
+  </div>
+  <p class="pano-note muted small">
+    The flag is the capture timestamp, formatted exactly like
+    <code>USG{YYYY-MM-DD HH:MM:SS}</code>.
+    Submit it on the challenge page.
+  </p>
+</section>
+{% endblock %}

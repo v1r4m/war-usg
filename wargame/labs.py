@@ -39,6 +39,14 @@ def hidden():
     return render_template("labs/hidden.html", flag=flag_for("hidden"))
 
 
+# ---------- OSINT: Street View (geolocate a panorama) ----------
+
+@bp.route("/streetview")
+def streetview():
+    flag_for("streetview")  # 404 unless the challenge is visible; flag never shown here
+    return render_template("labs/streetview.html")
+
+
 # ---------- 2. No Robots Allowed (robots.txt) ----------
 
 @bp.route("/robots/")
