@@ -49,6 +49,49 @@ def index():
     return render_template("labs/calc.html", version=LITEXPR_PIN)
 
 
+# A trimmed, believable copy of the calculator server, shown by the "see source" link.
+# It deliberately reveals the one thing that matters: the app just calls litexpr.evaluate().
+SERVER_SOURCE = '''\
+# server.py — USG Calc
+# deploy: pip install -r requirements.txt && gunicorn server:app
+from flask import Flask, request, jsonify, render_template
+import litexpr
+
+app = Flask(__name__)
+
+
+@app.get("/")
+def index():
+    return render_template("calc.html", version=litexpr.__version__)
+
+
+@app.post("/api/eval")
+def api_eval():
+    expr = (request.get_json(silent=True) or {}).get("expr", "")
+    if not isinstance(expr, str) or len(expr) > 300:
+        return jsonify(error="bad expression"), 400
+    try:
+        # the whole calculator is just this one call into our dependency
+        value = litexpr.evaluate(expr)
+    except litexpr.ExprError as e:
+        return jsonify(error=str(e)), 400
+    result = litexpr.format(value) if isinstance(value, (int, float)) else str(value)
+    return jsonify(expr=expr, result=result)
+
+
+if __name__ == "__main__":
+    app.run(port=3000)
+'''
+
+
+@bp.route("/source")
+def source():
+    if not _available():
+        from flask import abort
+        abort(404)
+    return Response(SERVER_SOURCE, mimetype="text/plain; charset=utf-8")
+
+
 @bp.route("/requirements.txt")
 def requirements_txt():
     if not _available():
