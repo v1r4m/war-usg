@@ -81,7 +81,7 @@ EXTERNAL = {
 # Credits shown next to the title. Filled in when empty, so an admin's edit wins.
 AUTHORS = {
     "s3versions": "GoldenFall",
-    "supplychain": "v1r4m",
+    "supplychain": "viram",
     "baekjoon": "viram",
     "baekjoon_revenge": "viram",
 }

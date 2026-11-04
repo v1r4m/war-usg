@@ -24,7 +24,7 @@ A hacking wargame (CTF) platform built with Flask.
 | SQL Login | web | medium | SQL injection | |
 | File Viewer | web | hard | Path traversal filter bypass | |
 | Deleted, Not Gone | cloud | medium | S3 versioning (delete markers, `ListBucketVersions`) | GoldenFall |
-| web calc | misc | medium | A PyPI dependency whose published artifact differs from its source (same version, xz-style) | v1r4m |
+| web calc | misc | medium | A PyPI dependency whose published artifact differs from its source (same version, xz-style) | viram |
 | baekjoon | misc | hard | Sorting under a cycle budget | viram |
 | baekjoon revenge | misc | hard | The same judge, N = 65536 | viram |
 
