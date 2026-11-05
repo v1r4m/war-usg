@@ -80,11 +80,21 @@ def _baekjoon_revenge_desc(flag):
     )
 
 
+def _just_algebra_desc(flag):
+    return (
+        "A verification server accepts only valid zero-knowledge proofs.\n\n"
+        "Your goal is to generate a proof that satisfies the hidden condition\n"
+        "and submit it to the server.\n\n"
+        "The circuit files and the verifier's API are on the challenge server."
+    )
+
+
 # Challenges whose server runs in its own container (see challenges/). The wargame only links to
 # them, so the URL and flag come from the environment and must match what that container serves.
 EXTERNAL = {
     "baekjoon": ("BAEKJOON_URL", "BAEKJOON_FLAG"),
     "baekjoon_revenge": ("BAEKJOON_REVENGE_URL", "BAEKJOON_REVENGE_FLAG"),
+    "just_algebra": ("JUST_ALGEBRA_URL", "JUST_ALGEBRA_FLAG"),
 }
 
 # Credits shown next to the title. Filled in when empty, so an admin's edit wins.
@@ -94,6 +104,7 @@ AUTHORS = {
     "streetview": "viram",
     "baekjoon": "viram",
     "baekjoon_revenge": "viram",
+    "just_algebra": "miiz",
 }
 
 
@@ -166,6 +177,10 @@ DEFAULTS = [
     (
         "baekjoon_revenge", "baekjoon revenge", "misc", "hard", 350, None,
         _baekjoon_revenge_desc,
+    ),
+    (
+        "just_algebra", "Just Algebra", "crypto", "medium", 300, None,
+        _just_algebra_desc,
     ),
 ]
 

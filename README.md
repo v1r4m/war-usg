@@ -11,7 +11,7 @@ A hacking wargame (CTF) platform built with Flask.
 - **Admin pages**: dashboard, create / edit / hide / delete challenges, user management, submission log
 - **Credits**: each challenge can name its author, shown on the list and the challenge page
 - **Slash intro**: the team artwork waves like a flag on the home page; drag (or click) to slice it open
-- **13 built-in challenges**: flags are randomly generated on every install (except the externally hosted ones)
+- **14 built-in challenges**: flags are randomly generated on every install (except the externally hosted ones)
 
 | Challenge | Category | Difficulty | Topic | Author |
 |---|---|---|---|---|
@@ -28,10 +28,12 @@ A hacking wargame (CTF) platform built with Flask.
 | naver panorama | k-osint | medium | Geolocate a street-view panorama, then read its capture time from an unauthenticated map API | viram |
 | baekjoon | misc | hard | Sorting under a cycle budget | viram |
 | baekjoon revenge | misc | hard | The same judge, N = 65536 | viram |
+| Just Algebra | crypto | medium | Zero-knowledge proofs (circom / Groth16) | miiz |
 
 > The labs are **intentionally vulnerable** for learning, but isolated so the server itself stays safe.
 > SQLi only touches a fresh in-memory DB per request, path traversal reads from a virtual filesystem, never the real disk, the S3 lab imitates a bucket in memory without touching AWS, and the supply-chain lab's dependency (`litexpr`) carries a backdoor that only ever returns one fixed constant string — it reads no environment, opens no network, and runs no code, so it is safe to install on the server.
 > The baekjoon judges run players' code, so they live in their own containers (`challenges/`), never inside the wargame.
+> The Just Algebra verifier is a Node.js service, so it lives in its own container (`challenges/just-algebra`) too.
 
 ## Run locally
 ```bash
@@ -90,6 +92,7 @@ flask --app run s3-script     # print the CloudShell upload script for the S3 la
 | `SUPPLYCHAIN_FLAG` | baked into litexpr | Override "Just a Patch Release" flag (must match the published litexpr artifact) |
 | `BAEKJOON_URL` / `BAEKJOON_FLAG` | - | Link and flag of the baekjoon judge (hidden until the URL is set) |
 | `BAEKJOON_REVENGE_URL` / `BAEKJOON_REVENGE_FLAG` | - | Same for baekjoon revenge |
+| `JUST_ALGEBRA_URL` / `JUST_ALGEBRA_FLAG` | - | Link and flag of the Just Algebra verifier (hidden until the URL is set) |
 
 ## Real S3 for "Deleted, Not Gone"
 By default the S3 lab runs in memory. To use a real bucket instead:
@@ -159,6 +162,27 @@ docker build -t usg-baekjoon challenges/baekjoon
 docker run --rm -p 8001:8000 -e FLAG='USG{test}' usg-baekjoon   # → http://localhost:8001
 ```
 
+## Just Algebra verifier (separate container)
+`challenges/just-algebra` is a small Node.js (snarkjs) server: it issues a fresh instance per session
+and returns the flag for a valid proof. It also serves the circuit files players need
+(`/files/...`), so nothing has to be attached in the wargame.
+
+1. New resource → same GitHub repo → Build Pack: **Dockerfile**,
+   Base Directory `/challenges/just-algebra`, Ports Exposes `8000`
+2. Environment variable `FLAG=USG{...}` on the verifier (no storage needed)
+3. On the wargame, set `JUST_ALGEBRA_URL` to the verifier's public URL and `JUST_ALGEBRA_FLAG` to the
+   same flag, then redeploy.
+
+Run it locally:
+```bash
+docker build -t usg-just-algebra challenges/just-algebra
+docker run --rm -p 8002:8000 -e FLAG='USG{test}' usg-just-algebra   # → http://localhost:8002
+```
+
+Players get only `public/` (`circuit.circom`, `circuit.wasm`, `circuit_final.zkey`). The zkey is the
+Groth16 proving key for the circuit compiled with `circom --O2`, and `verification_key.json` (server only)
+is exported from it. Rebuilding the circuit means redoing the setup and replacing all of them.
+
 ## Layout
 ```
 wargame/
@@ -174,4 +198,5 @@ wargame/
 challenges/
   baekjoon/          judge for "baekjoon" (own container)
   baekjoon-revenge/  judge for "baekjoon revenge" (own container)
+  just-algebra/      Groth16 verifier for "Just Algebra" (own container)
 ```
