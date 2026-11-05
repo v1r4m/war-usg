@@ -53,6 +53,9 @@ def index():
 # It deliberately reveals the one thing that matters: the app just calls litexpr.evaluate().
 SERVER_SOURCE = '''\
 # server.py — USG Calc
+from flask import Flask, jsonify, render_template, request
+
+import litexpr
 
 app = Flask(__name__)
 
